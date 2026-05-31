@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="20" fill="#0a0a0a"/>
+  <path d="M50 8L12 24V56C12 78 28 96 50 100C72 96 88 78 88 56V24L50 8Z"
+    fill="#111827" stroke="#00d4ff" stroke-width="2.5"/>
+  <!-- Crown -->
+  <path d="M32 60L38 38L50 52L62 38L68 60Z"
+    fill="#00d4ff" opacity="0.9"/>
+  <rect x="30" y="60" width="40" height="6" rx="3" fill="#00d4ff" opacity="0.9"/>
+</svg>

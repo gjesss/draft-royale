@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply h-full;
+    background-color: #0a0a0a;
+    color: #e5e7eb;
+    font-family: system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Prevent iOS rubber-band scroll */
+  #root {
+    position: fixed;
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-6 rounded-xl
+           transition-all duration-200 active:scale-95 shadow-neon
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .btn-ghost {
+    @apply border border-gray-600 hover:border-cyan-500 text-gray-300 hover:text-cyan-400
+           font-medium py-3 px-6 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl
+           transition-all duration-200 active:scale-95;
+  }
+
+  .card {
+    @apply bg-royal-card border border-royal-border rounded-2xl p-4;
+  }
+
+  .neon-text {
+    @apply text-cyan-400;
+    text-shadow: 0 0 10px #00d4ff80;
+  }
+
+  .crown-badge {
+    @apply inline-flex items-center justify-center w-5 h-5 rounded-full
+           bg-yellow-500 text-black text-xs font-bold;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/80 backdrop-blur-sm z-50
+           flex items-end sm:items-center justify-center p-0 sm:p-4;
+  }
+
+  .modal-panel {
+    @apply bg-royal-card border border-royal-border rounded-t-3xl sm:rounded-3xl
+           w-full sm:max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up;
+  }
+
+  .pick-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 2px;
+}
