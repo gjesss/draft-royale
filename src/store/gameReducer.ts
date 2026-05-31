@@ -148,8 +148,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
             newPlayers = updatePlayer(newPlayers, pendingChallenger.id, {
               pendingChallengePickPosition: null,
             });
-            // Override modal to challenge
-            modal = { kind: 'challenge', challenge };
+            // Show draw result first, noting the challenge will follow
+            modal = {
+              kind: 'draw-result',
+              ballType: 'pick',
+              pickedPlayerId: player.id,
+              pickedPosition: slot.position,
+              pendingChallengeName: state.players.find(p => p.id === pendingChallenger.id)?.name,
+            };
           }
         }
 
@@ -192,18 +198,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       // Rule 3: if player already has a pending challenge, they must put it back and draw again
       if (player.pendingChallengePickPosition !== null) {
-        // Put the pick-swap ball back and reshuffle (player must draw again)
-        // We'll signal this in the modal — for simplicity we just put ball back at random position
         const swapBall = { id: `b-reinserted-${Date.now()}`, type: 'pick-swap' as const };
         const newPool = [...state.ballPool];
         const insertAt = Math.floor(Math.random() * (newPool.length + 1));
         newPool.splice(insertAt, 0, swapBall);
-        // Show a message via the draw-result modal
         return {
           ...state,
           ballPool: newPool,
-          drawnCount: state.drawnCount - 1, // uncounting the draw
-          modal: null,
+          drawnCount: state.drawnCount - 1,
+          // Show rule-3 toast: reuse draw-result modal with special marker
+          modal: { kind: 'draw-result', ballType: 'pick-swap', rule3Redraw: true } as GameState['modal'],
           lastDraw: { ballType: 'pick-swap' },
         };
       }
@@ -251,6 +255,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const newPlayers = updatePlayer(state.players, challengerId, {
         pendingChallengePickPosition: targetPosition,
       });
+      // Bug fix: if ballPool is empty and no pick balls remain, pending challenge
+      // can never trigger — forfeit it silently and check for game completion
+      const remainingPickBalls = state.ballPool.filter(b => b.type === 'pick').length;
+      if (state.ballPool.length === 0 || remainingPickBalls === 0) {
+        const clearedPlayers = updatePlayer(newPlayers, challengerId, {
+          pendingChallengePickPosition: null,
+        });
+        return {
+          ...state,
+          players: clearedPlayers,
+          modal: null,
+          phase: state.activeChallenge === null ? 'complete' : state.phase,
+        };
+      }
       return { ...state, players: newPlayers, modal: null };
     }
 
@@ -359,6 +377,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     // ── Close modal ─────────────────────────────────────────────────────────
     case 'CLOSE_MODAL': {
+      // If there's an active challenge waiting behind a draw-result modal, show it now
+      if (state.activeChallenge && state.modal?.kind === 'draw-result') {
+        return {
+          ...state,
+          modal: { kind: 'challenge', challenge: state.activeChallenge },
+        };
+      }
       const isComplete = state.ballPool.length === 0 && state.activeChallenge === null;
       return {
         ...state,

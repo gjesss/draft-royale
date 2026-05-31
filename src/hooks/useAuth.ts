@@ -7,7 +7,6 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   signInWithPopup,
-  getRedirectResult,
 } from 'firebase/auth'
 import {
   doc, getDoc, setDoc, query,
@@ -68,15 +67,25 @@ export function useAuth() {
       const cred = await signInWithPopup(auth, googleProvider)
       // If new Google user, auto-create a profile from their Google display name
       const profile = await fetchProfile(cred.user.uid)
-      if (!profile && cred.user.displayName) {
-        const base = cred.user.displayName.toLowerCase().replace(/[^a-z0-9]/g, '')
-        const username = base.slice(0, 20) || `user${Date.now().toString().slice(-6)}`
+      if (!profile) {
+        const displayName = cred.user.displayName ?? 'Player'
+        const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'player'
+        // Ensure username is unique by appending suffix if needed
+        let username = base
+        let attempt = 0
+        while (true) {
+          const q = query(collection(db, 'users'), where('username', '==', username))
+          const snap = await getDocs(q)
+          if (snap.empty) break
+          attempt++
+          username = `${base}${attempt}`
+        }
         await setDoc(doc(db, 'users', cred.user.uid), {
           uid: cred.user.uid,
           username,
-          displayName: cred.user.displayName,
+          displayName,
           createdAt: new Date().toISOString(),
-        })
+        } as UserProfile)
       }
       return { data: cred, error: null }
     } catch (e: unknown) {

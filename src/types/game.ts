@@ -48,7 +48,7 @@ export interface Challenge {
 
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
-  | { kind: 'draw-result'; ballType: BallType; pickedPlayerId?: string; pickedPosition?: number }
+  | { kind: 'draw-result'; ballType: BallType; pickedPlayerId?: string; pickedPosition?: number; rule3Redraw?: boolean; pendingChallengeName?: string }
   | { kind: 'assign-swap'; }        // who drew the pick-swap ball?
   | { kind: 'assign-shotgun'; }     // who drew the shotgun ball?
   | { kind: 'shotgun-overflow'; playerId: string }
