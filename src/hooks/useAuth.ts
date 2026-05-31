@@ -1,88 +1,86 @@
 import { useEffect, useState, useCallback } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
-import { Profile } from '../types/database'
+import {
+  User,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as fbSignOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+} from 'firebase/auth'
+import {
+  doc, getDoc, setDoc, query,
+  collection, where, getDocs,
+} from 'firebase/firestore'
+import { auth, db } from '../lib/firebase'
+import { UserProfile } from '../types/db'
 
 interface AuthState {
   user: User | null
-  profile: Profile | null
-  session: Session | null
+  profile: UserProfile | null
   loading: boolean
 }
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    session: null,
-    loading: true,
-  })
+  const [state, setState] = useState<AuthState>({ user: null, profile: null, loading: true })
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    return data ?? null
+  const fetchProfile = useCallback(async (uid: string): Promise<UserProfile | null> => {
+    const snap = await getDoc(doc(db, 'users', uid))
+    return snap.exists() ? (snap.data() as UserProfile) : null
   }, [])
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id)
-        setState({ user: session.user, profile, session, loading: false })
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profile = await fetchProfile(user.uid)
+        setState({ user, profile, loading: false })
       } else {
-        setState(s => ({ ...s, loading: false }))
+        setState({ user: null, profile: null, loading: false })
       }
     })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id)
-        setState({ user: session.user, profile, session, loading: false })
-      } else {
-        setState({ user: null, profile: null, session: null, loading: false })
-      }
-    })
-
-    return () => subscription.unsubscribe()
+    return unsub
   }, [fetchProfile])
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    return { data, error }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, password)
+      await sendEmailVerification(cred.user)
+      return { data: cred, error: null }
+    } catch (e: unknown) {
+      return { data: null, error: e as Error }
+    }
   }
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    return { data, error }
-  }
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
-  }
-
-  const createProfile = async (userId: string, username: string, displayName: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .insert({ id: userId, username: username.toLowerCase(), display_name: displayName })
-      .select()
-      .single()
-
-    if (data) {
-      setState(s => ({ ...s, profile: data }))
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password)
+      return { data: cred, error: null }
+    } catch (e: unknown) {
+      return { data: null, error: e as Error }
     }
-
-    return { data, error }
   }
 
-  const refreshProfile = async () => {
-    if (!state.user) return
-    const profile = await fetchProfile(state.user.id)
-    setState(s => ({ ...s, profile }))
+  const signOut = () => fbSignOut(auth)
+
+  const createProfile = async (uid: string, username: string, displayName: string) => {
+    try {
+      const profile: UserProfile = {
+        uid,
+        username: username.toLowerCase(),
+        displayName: displayName || username,
+        createdAt: new Date().toISOString(),
+      }
+      await setDoc(doc(db, 'users', uid), profile)
+      setState(s => ({ ...s, profile }))
+      return { data: profile, error: null }
+    } catch (e: unknown) {
+      return { data: null, error: e as Error }
+    }
+  }
+
+  const isUsernameAvailable = async (username: string): Promise<boolean> => {
+    const q = query(collection(db, 'users'), where('username', '==', username.toLowerCase()))
+    const snap = await getDocs(q)
+    return snap.empty
   }
 
   return {
@@ -91,7 +89,6 @@ export function useAuth() {
     signIn,
     signOut,
     createProfile,
-    refreshProfile,
-    isCommissioner: (leagueCommissionerId: string) => state.user?.id === leagueCommissionerId,
+    isUsernameAvailable,
   }
 }

@@ -1,11 +1,56 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '../lib/supabase'
-import { League, LeagueMember, Profile, Season, Game, DraftResult } from '../types/database'
+import {
+  collection, doc, getDoc, getDocs, setDoc,
+  addDoc, updateDoc, deleteDoc, query,
+  where, orderBy, limit, serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import {
+  League, LeagueMember, LeagueInvite,
+  Season, Game, DraftResult,
+} from '../types/db'
 
-export type MemberWithProfile = LeagueMember & { profiles: Profile }
+function nowIso() { return new Date().toISOString() }
+function expiresIso(days = 7) {
+  const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString()
+}
+function randomToken() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(18)))
+    .map(b => b.toString(16).padStart(2, '0')).join('')
+}
 
+// ── User's league list ────────────────────────────────────────────────────────
+export function useMyLeagues(userId: string | null) {
+  const [leagues, setLeagues] = useState<League[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetch = useCallback(async () => {
+    if (!userId) { setLoading(false); return }
+    // leagues where user is a member
+    const memberSnaps = await getDocs(
+      query(collection(db, 'leagueMembers'), where('userId', '==', userId))
+    )
+    const leagueIds = memberSnaps.docs.map(d => d.data().leagueId as string)
+    if (leagueIds.length === 0) { setLeagues([]); setLoading(false); return }
+
+    const ls = await Promise.all(
+      leagueIds.map(async id => {
+        const snap = await getDoc(doc(db, 'leagues', id))
+        return snap.exists() ? { id: snap.id, ...snap.data() } as League : null
+      })
+    )
+    setLeagues(ls.filter(Boolean) as League[])
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => { fetch() }, [fetch])
+  return { leagues, loading, refresh: fetch }
+}
+
+// ── Full league data ──────────────────────────────────────────────────────────
 export interface FullLeague extends League {
-  league_members: MemberWithProfile[]
+  members: LeagueMember[]
   seasons: Season[]
 }
 
@@ -18,161 +63,165 @@ export function useLeague(leagueId: string | null) {
   const fetchLeague = useCallback(async () => {
     if (!leagueId) return
     setLoading(true)
+    try {
+      const [leagueSnap, membersSnap, seasonsSnap, gamesSnap] = await Promise.all([
+        getDoc(doc(db, 'leagues', leagueId)),
+        getDocs(collection(db, 'leagues', leagueId, 'members')),
+        getDocs(collection(db, 'leagues', leagueId, 'seasons')),
+        getDocs(query(
+          collection(db, 'leagues', leagueId, 'games'),
+          orderBy('createdAt', 'desc'),
+          limit(20)
+        )),
+      ])
 
-    const [leagueRes, gamesRes] = await Promise.all([
-      supabase
-        .from('leagues')
-        .select(`*, league_members(*, profiles(*)), seasons(*)`)
-        .eq('id', leagueId)
-        .single(),
-      supabase
-        .from('games')
-        .select('*')
-        .eq('league_id', leagueId)
-        .order('created_at', { ascending: false })
-        .limit(20),
-    ])
+      if (!leagueSnap.exists()) { setError('League not found'); setLoading(false); return }
 
-    if (leagueRes.error) setError(leagueRes.error.message)
-    else setLeague(leagueRes.data as unknown as FullLeague)
-
-    if (!gamesRes.error) setGames(gamesRes.data ?? [])
+      setLeague({
+        id: leagueSnap.id,
+        ...leagueSnap.data(),
+        members: membersSnap.docs.map(d => d.data() as LeagueMember),
+        seasons: seasonsSnap.docs.map(d => ({ id: d.id, ...d.data() }) as Season),
+      } as FullLeague)
+      setGames(gamesSnap.docs.map(d => ({ id: d.id, ...d.data() }) as Game))
+    } catch (e: unknown) {
+      setError((e as Error).message)
+    }
     setLoading(false)
   }, [leagueId])
 
-  useEffect(() => {
-    fetchLeague()
-  }, [fetchLeague])
+  useEffect(() => { fetchLeague() }, [fetchLeague])
 
-  // ── Seasons ──────────────────────────────────────────────
+  // ── Seasons ─────────────────────────────────────────────────────────────
   const createSeason = async (name: string, year: number, sport: string) => {
     if (!leagueId) return { error: 'No league' }
-    const { data, error } = await supabase
-      .from('seasons')
-      .insert({ league_id: leagueId, name, year, sport })
-      .select()
-      .single()
-
-    if (!error) await fetchLeague()
-    return { data, error }
+    const ref = await addDoc(collection(db, 'leagues', leagueId, 'seasons'), {
+      name, year, sport, status: 'active', createdAt: nowIso(),
+    })
+    await fetchLeague()
+    return { data: { id: ref.id }, error: null }
   }
 
-  // ── Invites ──────────────────────────────────────────────
-  const createInvite = async (userId: string, email?: string) => {
+  // ── Invites ─────────────────────────────────────────────────────────────
+  const createInvite = async (invitedBy: string, leagueName: string, email = '') => {
     if (!leagueId) return { data: null, error: 'No league' }
-    const { data, error } = await supabase
-      .from('league_invites')
-      .insert({ league_id: leagueId, email: email || null, invited_by: userId })
-      .select()
-      .single()
-
-    return { data, error }
+    const token = randomToken()
+    const invite: Omit<LeagueInvite, 'id'> = {
+      token, leagueId, leagueName,
+      email, invitedBy,
+      status: 'pending',
+      createdAt: nowIso(),
+      expiresAt: expiresIso(7),
+    }
+    const ref = await addDoc(collection(db, 'leagues', leagueId, 'invites'), invite)
+    // Also write a token-index document for fast lookup without knowing leagueId
+    await setDoc(doc(db, 'inviteTokens', token), {
+      leagueId, inviteId: ref.id, expiresAt: invite.expiresAt,
+    })
+    return { data: { id: ref.id, ...invite }, error: null }
   }
 
-  const revokeInvite = async (inviteId: string) => {
-    const { error } = await supabase
-      .from('league_invites')
-      .update({ status: 'revoked' })
-      .eq('id', inviteId)
-
-    if (!error) await fetchLeague()
-    return { error }
+  const revokeInvite = async (inviteId: string, token: string) => {
+    if (!leagueId) return
+    await updateDoc(doc(db, 'leagues', leagueId, 'invites', inviteId), { status: 'revoked' })
+    await deleteDoc(doc(db, 'inviteTokens', token))
+    await fetchLeague()
   }
 
-  const getInvites = async () => {
+  const getInvites = async (): Promise<LeagueInvite[]> => {
     if (!leagueId) return []
-    const { data } = await supabase
-      .from('league_invites')
-      .select('*')
-      .eq('league_id', leagueId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-
-    return data ?? []
+    const snap = await getDocs(
+      query(collection(db, 'leagues', leagueId, 'invites'), where('status', '==', 'pending'))
+    )
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }) as LeagueInvite)
   }
 
-  // ── Members ──────────────────────────────────────────────
-  const removeMember = async (memberId: string) => {
-    const { error } = await supabase.from('league_members').delete().eq('id', memberId)
-    if (!error) await fetchLeague()
-    return { error }
-  }
-
-  // ── Games ────────────────────────────────────────────────
+  // ── Games ────────────────────────────────────────────────────────────────
   const createGame = async (commissionerId: string, seasonId?: string) => {
     if (!leagueId) return { data: null, error: 'No league' }
-    const { data, error } = await supabase
-      .from('games')
-      .insert({
-        league_id: leagueId,
-        season_id: seasonId ?? null,
-        commissioner_id: commissionerId,
-        status: 'lobby',
-      })
-      .select()
-      .single()
-
-    if (!error) await fetchLeague()
-    return { data, error }
+    const ref = await addDoc(collection(db, 'leagues', leagueId, 'games'), {
+      leagueId,
+      seasonId: seasonId ?? null,
+      commissionerId,
+      status: 'lobby',
+      gameState: null,
+      createdAt: nowIso(),
+      completedAt: null,
+    })
+    await fetchLeague()
+    return { data: { id: ref.id }, error: null }
   }
 
   return {
-    league,
-    games,
-    loading,
-    error,
+    league, games, loading, error,
     refresh: fetchLeague,
-    createSeason,
-    createInvite,
-    revokeInvite,
-    getInvites,
-    removeMember,
-    createGame,
+    createSeason, createInvite, revokeInvite, getInvites, createGame,
   }
 }
 
-// ── User's leagues list ───────────────────────────────────
-export function useMyLeagues(userId: string | null) {
-  const [leagues, setLeagues] = useState<League[]>([])
-  const [loading, setLoading] = useState(true)
+// ── Join via token ────────────────────────────────────────────────────────────
+export async function lookupInviteToken(token: string) {
+  const snap = await getDoc(doc(db, 'inviteTokens', token))
+  if (!snap.exists()) return null
+  const { leagueId, inviteId, expiresAt } = snap.data()
+  if (new Date(expiresAt) < new Date()) return null
 
-  const fetch = useCallback(async () => {
-    if (!userId) { setLoading(false); return }
-    const { data } = await supabase
-      .from('league_members')
-      .select('league_id, leagues(*)')
-      .eq('user_id', userId)
+  const inviteSnap = await getDoc(doc(db, 'leagues', leagueId, 'invites', inviteId))
+  if (!inviteSnap.exists()) return null
+  const invite = inviteSnap.data() as LeagueInvite
 
-    const ls = (data ?? []).map((m: any) => m.leagues).filter(Boolean) as League[]
-    setLeagues(ls)
-    setLoading(false)
-  }, [userId])
+  const leagueSnap = await getDoc(doc(db, 'leagues', leagueId))
+  const leagueName = leagueSnap.exists() ? leagueSnap.data().name : 'Unknown League'
 
-  useEffect(() => { fetch() }, [fetch])
-
-  return { leagues, loading, refresh: fetch }
+  return { inviteId, leagueId, leagueName, status: invite.status, token }
 }
 
-// ── Draft results history ─────────────────────────────────
-export function useDraftHistory(leagueId: string | null, seasonId?: string) {
-  const [history, setHistory] = useState<(DraftResult & { game: Game })[]>([])
+export async function acceptInvite(
+  token: string, inviteId: string, leagueId: string,
+  userId: string, displayName: string, username: string
+) {
+  // Add member
+  await setDoc(doc(db, 'leagues', leagueId, 'members', userId), {
+    userId, role: 'member', displayName, username, joinedAt: nowIso(),
+  })
+  // Add leagueMembers index
+  await setDoc(doc(db, 'leagueMembers', `${leagueId}_${userId}`), {
+    userId, leagueId, role: 'member',
+  })
+  // Mark invite accepted
+  await updateDoc(doc(db, 'leagues', leagueId, 'invites', inviteId), { status: 'accepted' })
+  await deleteDoc(doc(db, 'inviteTokens', token))
+}
+
+// ── Draft history ─────────────────────────────────────────────────────────────
+export function useDraftHistory(leagueId: string | null) {
+  const [history, setHistory] = useState<{ gameId: string; date: string; results: DraftResult[] }[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!leagueId) return
-    let q = supabase
-      .from('draft_results')
-      .select('*, game:games(*)')
-      .eq('league_id', leagueId)
-      .order('created_at', { ascending: false })
-
-    if (seasonId) q = q.eq('season_id', seasonId)
-
-    q.then(({ data }) => {
-      setHistory((data ?? []) as any)
+    getDocs(
+      query(
+        collection(db, 'leagues', leagueId, 'draftResults'),
+        orderBy('createdAt', 'desc')
+      )
+    ).then(snap => {
+      const map = new Map<string, DraftResult[]>()
+      snap.docs.forEach(d => {
+        const r = { id: d.id, ...d.data() } as DraftResult
+        const arr = map.get(r.gameId) ?? []
+        arr.push(r)
+        map.set(r.gameId, arr)
+      })
+      const groups = [...map.entries()].map(([gameId, results]) => ({
+        gameId,
+        date: results[0]?.createdAt ?? '',
+        results: results.sort((a, b) => a.pickPosition - b.pickPosition),
+      }))
+      setHistory(groups)
       setLoading(false)
     })
-  }, [leagueId, seasonId])
+  }, [leagueId])
 
   return { history, loading }
 }

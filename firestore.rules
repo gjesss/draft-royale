@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── User profiles ───────────────────────────────────────
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+
+    // ── League member index (fast lookup by userId) ─────────
+    match /leagueMembers/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Invite token index (fast lookup by token) ───────────
+    match /inviteTokens/{token} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Leagues ─────────────────────────────────────────────
+    match /leagues/{leagueId} {
+      // Readable by members
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+
+      // Creatable by any authenticated user
+      allow create: if request.auth != null &&
+        request.resource.data.commissionerId == request.auth.uid;
+
+      // Updatable by commissioner only
+      allow update: if request.auth != null &&
+        resource.data.commissionerId == request.auth.uid;
+
+      // ── Members subcollection ──────────────────────────────
+      match /members/{memberId} {
+        allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow write: if request.auth != null;
+      }
+
+      // ── Invites subcollection ──────────────────────────────
+      match /invites/{inviteId} {
+        allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+        allow update: if request.auth != null;
+        allow delete: if request.auth != null;
+      }
+
+      // ── Seasons subcollection ──────────────────────────────
+      match /seasons/{seasonId} {
+        allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow write: if request.auth != null &&
+          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+      }
+
+      // ── Games subcollection ────────────────────────────────
+      match /games/{gameId} {
+        allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+        allow update: if request.auth != null &&
+          resource.data.commissionerId == request.auth.uid;
+      }
+
+      // ── Draft results subcollection ────────────────────────
+      match /draftResults/{resultId} {
+        allow read: if request.auth != null &&
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow create: if request.auth != null;
+      }
+    }
+  }
+}

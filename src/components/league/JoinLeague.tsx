@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { lookupInviteToken, acceptInvite } from '../../hooks/useLeague'
 import { useAuth } from '../../hooks/useAuth'
 
 interface Props {
@@ -9,64 +9,44 @@ interface Props {
 }
 
 export default function JoinLeague({ token, onJoined, onError }: Props) {
-  const { user } = useAuth()
-  const [invite, setInvite] = useState<{ id: string; league_id: string; league_name: string } | null>(null)
+  const { user, profile } = useAuth()
+  const [invite, setInvite] = useState<{
+    inviteId: string; leagueId: string; leagueName: string; status: string
+  } | null>(null)
   const [status, setStatus] = useState<'loading' | 'ready' | 'joining' | 'error' | 'already-member'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
-    supabase.rpc('get_invite_by_token', { p_token: token }).then(({ data, error }) => {
-      if (error || !data || data.length === 0) {
+    lookupInviteToken(token).then(result => {
+      if (!result) {
         setStatus('error')
         setErrorMsg('Invite link is invalid or has expired.')
         return
       }
-      const inv = data[0]
-      if (inv.status !== 'pending') {
+      if (result.status !== 'pending') {
         setStatus('error')
         setErrorMsg('This invite has already been used or revoked.')
         return
       }
-      setInvite(inv)
+      setInvite(result)
       setStatus('ready')
     })
   }, [token])
 
   const handleJoin = async () => {
-    if (!user || !invite) return
+    if (!user || !invite || !profile) return
     setStatus('joining')
 
-    // Check if already a member
-    const { data: existing } = await supabase
-      .from('league_members')
-      .select('id')
-      .eq('league_id', invite.league_id)
-      .eq('user_id', user.id)
-      .single()
-
-    if (existing) {
-      setStatus('already-member')
-      setTimeout(() => onJoined(invite.league_id), 1500)
-      return
-    }
-
-    // Join league
-    const { error: joinErr } = await supabase.from('league_members').insert({
-      league_id: invite.league_id,
-      user_id: user.id,
-      role: 'member',
-    })
-
-    if (joinErr) {
+    try {
+      await acceptInvite(
+        token, invite.inviteId, invite.leagueId,
+        user.uid, profile.displayName, profile.username
+      )
+      onJoined(invite.leagueId)
+    } catch (e: unknown) {
       setStatus('error')
-      setErrorMsg(joinErr.message)
-      return
+      setErrorMsg((e as Error).message)
     }
-
-    // Mark invite as accepted
-    await supabase.from('league_invites').update({ status: 'accepted' }).eq('id', invite.id)
-
-    onJoined(invite.league_id)
   }
 
   return (
@@ -79,7 +59,7 @@ export default function JoinLeague({ token, onJoined, onError }: Props) {
         <>
           <h2 className="text-xl font-bold text-white mb-1">You're invited!</h2>
           <p className="text-gray-400 mb-1">Join</p>
-          <p className="text-2xl font-bold neon-text mb-6">{invite.league_name}</p>
+          <p className="text-2xl font-bold neon-text mb-6">{invite.leagueName}</p>
           <button className="btn-primary w-full max-w-xs py-4 text-lg" onClick={handleJoin}>
             Join League →
           </button>
@@ -87,10 +67,6 @@ export default function JoinLeague({ token, onJoined, onError }: Props) {
       )}
 
       {status === 'joining' && <p className="text-cyan-400">Joining league...</p>}
-
-      {status === 'already-member' && (
-        <p className="text-green-400">You're already a member! Redirecting...</p>
-      )}
 
       {status === 'error' && (
         <>

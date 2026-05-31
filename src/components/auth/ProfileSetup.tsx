@@ -1,9 +1,8 @@
 import { useState, FormEvent } from 'react'
 import { useAuth } from '../../hooks/useAuth'
-import { supabase } from '../../lib/supabase'
 
 export default function ProfileSetup() {
-  const { user, createProfile } = useAuth()
+  const { user, createProfile, isUsernameAvailable } = useAuth()
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState('')
@@ -21,23 +20,11 @@ export default function ProfileSetup() {
     }
 
     setLoading(true)
+    const available = await isUsernameAvailable(u)
+    if (!available) { setError('That username is already taken'); setLoading(false); return }
 
-    // Check username availability
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('username', u)
-      .single()
-
-    if (existing) {
-      setError('That username is already taken')
-      setLoading(false)
-      return
-    }
-
-    const { error } = await createProfile(user.id, u, displayName.trim() || username.trim())
-    if (error) setError(error.message)
-
+    const { error: err } = await createProfile(user.uid, u, displayName.trim() || username.trim())
+    if (err) setError(err.message)
     setLoading(false)
   }
 
@@ -48,7 +35,6 @@ export default function ProfileSetup() {
         <h2 className="text-2xl font-bold text-white mt-3">Set up your profile</h2>
         <p className="text-gray-400 text-sm mt-1">Choose a username for your leagues</p>
       </div>
-
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">
         <div>
           <input
@@ -56,16 +42,13 @@ export default function ProfileSetup() {
             placeholder="Username (e.g. johndoe23)"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            required
-            maxLength={20}
+            required maxLength={20}
             className="w-full bg-royal-card border border-royal-border rounded-xl px-4 py-3
                        text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500"
-            autoCapitalize="none"
-            autoCorrect="off"
+            autoCapitalize="none" autoCorrect="off"
           />
           <p className="text-gray-600 text-xs mt-1 pl-1">Letters, numbers, underscores. 3–20 chars.</p>
         </div>
-
         <input
           type="text"
           placeholder="Display name (e.g. John Doe)"
@@ -76,13 +59,11 @@ export default function ProfileSetup() {
                      text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500"
           autoCapitalize="words"
         />
-
         {error && (
           <p className="text-red-400 text-sm text-center bg-red-900/20 border border-red-800 rounded-xl px-3 py-2">
             {error}
           </p>
         )}
-
         <button type="submit" disabled={loading} className="btn-primary w-full py-3.5">
           {loading ? 'Saving...' : 'Continue →'}
         </button>

@@ -3,22 +3,16 @@ import { useAuth } from './hooks/useAuth'
 import { useGame, GameProvider } from './store/GameContext'
 import { useLeague } from './hooks/useLeague'
 
-// Auth
 import AuthScreen from './components/auth/AuthScreen'
 import ProfileSetup from './components/auth/ProfileSetup'
-
-// App screens
 import Dashboard from './components/dashboard/Dashboard'
 import LeagueHome from './components/league/LeagueHome'
 import JoinLeague from './components/league/JoinLeague'
 import GameLobby from './components/game/GameLobby'
-
-// Game screens
 import GameBoard from './components/GameBoard'
 import Complete from './components/Complete'
 import Rules from './components/Rules'
 
-// ── App view state ────────────────────────────────────────────────────────────
 type AppView =
   | { screen: 'dashboard' }
   | { screen: 'league'; leagueId: string }
@@ -27,58 +21,34 @@ type AppView =
 
 function AppRouter() {
   const { user, profile, loading } = useAuth()
-  const { state: gameState, detachGame, syncGame } = useGame()
+  const { state: gameState, syncGame } = useGame()
   const [view, setView] = useState<AppView>({ screen: 'dashboard' })
-  const [currentLeagueId, setCurrentLeagueId] = useState<string | undefined>()
 
-  // Check URL for invite token on first load
   useEffect(() => {
-    const path = window.location.pathname
-    const m = path.match(/^\/join\/([a-zA-Z0-9]+)$/)
-    if (m) {
-      window.history.replaceState(null, '', '/')
-      setView({ screen: 'join', token: m[1] })
-    }
+    const m = window.location.pathname.match(/^\/join\/([a-zA-Z0-9]+)$/)
+    if (m) { window.history.replaceState(null, '', '/'); setView({ screen: 'join', token: m[1] }) }
   }, [])
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-cyan-400 text-3xl animate-pulse">👑</span>
-      </div>
-    )
+    return <div className="min-h-screen flex items-center justify-center">
+      <span className="text-cyan-400 text-3xl animate-pulse">👑</span>
+    </div>
   }
 
   if (!user) {
-    const inviteToken = view.screen === 'join' ? view.token : undefined
-    return (
-      <AuthScreen
-        redirectNote={inviteToken ? '🔗 Sign in to accept your league invite' : undefined}
-      />
-    )
+    return <AuthScreen redirectNote={view.screen === 'join' ? '🔗 Sign in to accept your league invite' : undefined} />
   }
-
   if (!profile) return <ProfileSetup />
 
-  // ── Active game overlays everything ──────────────────────────────────────
+  // Active game takes over
   if (gameState.phase === 'rules') return <Rules />
-
   if (gameState.phase === 'playing') return <GameBoard />
+  if (gameState.phase === 'complete') return <Complete />
 
-  if (gameState.phase === 'complete') {
-    return (
-      <Complete
-        leagueId={currentLeagueId}
-      />
-    )
-  }
-
-  // ── Normal navigation ─────────────────────────────────────────────────────
   if (view.screen === 'join') {
     return (
-      <JoinLeague
-        token={view.token}
-        onJoined={(leagueId) => setView({ screen: 'league', leagueId })}
+      <JoinLeague token={view.token}
+        onJoined={id => setView({ screen: 'league', leagueId: id })}
         onError={() => setView({ screen: 'dashboard' })}
       />
     )
@@ -86,13 +56,11 @@ function AppRouter() {
 
   if (view.screen === 'league') {
     return (
-      <LeagueHome
-        leagueId={view.leagueId}
+      <LeagueHome leagueId={view.leagueId}
         onBack={() => setView({ screen: 'dashboard' })}
-        onStartGame={(gameId, isCom) => {
-          setCurrentLeagueId(view.leagueId)
+        onStartGame={(gameId, isCom) =>
           setView({ screen: 'game-lobby', gameId, leagueId: view.leagueId, isCommissioner: isCom })
-        }}
+        }
       />
     )
   }
@@ -100,8 +68,7 @@ function AppRouter() {
   if (view.screen === 'game-lobby') {
     return (
       <GameLobbyWrapper
-        gameId={view.gameId}
-        leagueId={view.leagueId}
+        gameId={view.gameId} leagueId={view.leagueId}
         isCommissioner={view.isCommissioner}
         onBack={() => setView({ screen: 'league', leagueId: view.leagueId })}
       />
@@ -110,7 +77,7 @@ function AppRouter() {
 
   return (
     <Dashboard
-      onSelectLeague={(leagueId) => setView({ screen: 'league', leagueId })}
+      onSelectLeague={id => setView({ screen: 'league', leagueId: id })}
       onJoinViaToken={() => {
         const input = prompt('Paste your invite link or token:')
         if (!input) return
@@ -121,34 +88,21 @@ function AppRouter() {
   )
 }
 
-// Loads league members for the lobby
-function GameLobbyWrapper({
-  gameId, leagueId, isCommissioner, onBack,
-}: {
-  gameId: string
-  leagueId: string
-  isCommissioner: boolean
-  onBack: () => void
+function GameLobbyWrapper({ gameId, leagueId, isCommissioner, onBack }: {
+  gameId: string; leagueId: string; isCommissioner: boolean; onBack: () => void
 }) {
   const { league } = useLeague(leagueId)
   const { syncGame } = useGame()
 
-  // Non-commissioner: subscribe to real-time immediately
   useEffect(() => {
-    if (!isCommissioner) syncGame(gameId, false)
-  }, [gameId, isCommissioner, syncGame])
+    if (!isCommissioner) syncGame(leagueId, gameId, false)
+  }, [gameId, leagueId, isCommissioner, syncGame])
 
-  if (!league) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading lobby...</div>
-  }
+  if (!league) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading lobby...</div>
 
   return (
-    <GameLobby
-      gameId={gameId}
-      leagueId={leagueId}
-      members={league.league_members}
-      isCommissioner={isCommissioner}
-      onBack={onBack}
+    <GameLobby gameId={gameId} leagueId={leagueId}
+      members={league.members} isCommissioner={isCommissioner} onBack={onBack}
     />
   )
 }

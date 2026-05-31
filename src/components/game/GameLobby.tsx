@@ -1,47 +1,38 @@
 import { useState } from 'react'
+import { doc, updateDoc } from 'firebase/firestore'
+import { db } from '../../lib/firebase'
 import { useGame } from '../../store/GameContext'
-import { MemberWithProfile } from '../../hooks/useLeague'
-import { supabase } from '../../lib/supabase'
+import { LeagueMember } from '../../types/db'
 
 interface Props {
   gameId: string
   leagueId: string
-  members: MemberWithProfile[]
+  members: LeagueMember[]
   isCommissioner: boolean
   onBack: () => void
 }
 
 export default function GameLobby({ gameId, leagueId, members, isCommissioner, onBack }: Props) {
   const { dispatch, syncGame } = useGame()
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(members.map(m => m.user_id)))
-  const [customNames, setCustomNames] = useState<Record<string, string>>(
-    Object.fromEntries(members.map(m => [m.user_id, (m as any).profiles?.display_name ?? (m as any).profiles?.username ?? '']))
+  const [selected, setSelected] = useState<Set<string>>(new Set(members.map(m => m.userId)))
+  const [names, setNames] = useState<Record<string, string>>(
+    Object.fromEntries(members.map(m => [m.userId, m.displayName || m.username]))
   )
   const [starting, setStarting] = useState(false)
 
-  const toggle = (uid: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      next.has(uid) ? next.delete(uid) : next.add(uid)
-      return next
-    })
-  }
+  const toggle = (uid: string) => setSelected(prev => {
+    const n = new Set(prev); n.has(uid) ? n.delete(uid) : n.add(uid); return n
+  })
 
   const handleStart = async () => {
-    if (selectedIds.size < 2) return
+    if (selected.size < 2) return
     setStarting(true)
-
     const playerNames = members
-      .filter(m => selectedIds.has(m.user_id))
-      .map(m => customNames[m.user_id]?.trim() || (m as any).profiles?.username || 'Player')
+      .filter(m => selected.has(m.userId))
+      .map(m => names[m.userId]?.trim() || m.username)
 
-    // Update game status to playing
-    await supabase.from('games').update({ status: 'playing' }).eq('id', gameId)
-
-    // Sync game context
-    syncGame(gameId, isCommissioner)
-
-    // Dispatch start
+    await updateDoc(doc(db, 'leagues', leagueId, 'games', gameId), { status: 'playing' })
+    syncGame(leagueId, gameId, isCommissioner)
     dispatch({ type: 'START_GAME', playerNames })
   }
 
@@ -64,63 +55,35 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, o
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <p className="text-gray-400 text-sm">
-          Select which league members are playing. You can also edit their display name for this game.
-        </p>
-
+        <p className="text-gray-400 text-sm">Select players and optionally edit their display name for this game.</p>
         <div className="space-y-2">
-          {members.map(m => {
-            const profile = (m as any).profiles
-            const selected = selectedIds.has(m.user_id)
-
-            return (
-              <div
-                key={m.user_id}
-                className={`card flex items-center gap-3 transition-all cursor-pointer
-                  ${selected ? 'border-cyan-500/50' : 'opacity-50'}`}
-                onClick={() => toggle(m.user_id)}
-              >
-                {/* Checkbox */}
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0
-                  ${selected ? 'border-cyan-400 bg-cyan-400' : 'border-gray-600'}`}>
-                  {selected && <span className="text-black text-xs font-bold">✓</span>}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium text-sm">@{profile?.username}</p>
-                </div>
-
-                {/* Editable display name */}
-                {selected && (
-                  <input
-                    type="text"
-                    value={customNames[m.user_id] ?? ''}
-                    onChange={e => setCustomNames(prev => ({ ...prev, [m.user_id]: e.target.value }))}
-                    onClick={e => e.stopPropagation()}
-                    placeholder="Display name"
-                    maxLength={20}
-                    className="w-28 bg-black/50 border border-royal-border rounded-lg px-2 py-1.5
-                               text-white text-sm focus:outline-none focus:border-cyan-500"
-                  />
-                )}
+          {members.map(m => (
+            <div key={m.userId}
+              className={`card flex items-center gap-3 cursor-pointer transition-all ${selected.has(m.userId) ? 'border-cyan-500/50' : 'opacity-50'}`}
+              onClick={() => toggle(m.userId)}>
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0
+                ${selected.has(m.userId) ? 'border-cyan-400 bg-cyan-400' : 'border-gray-600'}`}>
+                {selected.has(m.userId) && <span className="text-black text-xs font-bold">✓</span>}
               </div>
-            )
-          })}
+              <p className="text-white font-medium text-sm flex-1">@{m.username}</p>
+              {selected.has(m.userId) && (
+                <input type="text" value={names[m.userId] ?? ''} maxLength={20}
+                  onChange={e => setNames(p => ({ ...p, [m.userId]: e.target.value }))}
+                  onClick={e => e.stopPropagation()} placeholder="Display name"
+                  className="w-28 bg-black/50 border border-royal-border rounded-lg px-2 py-1.5
+                             text-white text-sm focus:outline-none focus:border-cyan-500"
+                />
+              )}
+            </div>
+          ))}
         </div>
-
-        <p className="text-gray-600 text-xs text-center">
-          {selectedIds.size} player{selectedIds.size !== 1 ? 's' : ''} selected
-        </p>
+        <p className="text-gray-600 text-xs text-center">{selected.size} player{selected.size !== 1 ? 's' : ''} selected</p>
       </div>
 
       <div className="px-4 pb-8 pt-4 border-t border-royal-border">
-        <button
-          className="btn-primary w-full py-4 text-lg"
-          onClick={handleStart}
-          disabled={selectedIds.size < 2 || starting}
-        >
-          {starting ? 'Starting...' : `🎱 Start Draft Royale (${selectedIds.size} players)`}
+        <button className="btn-primary w-full py-4 text-lg" onClick={handleStart}
+          disabled={selected.size < 2 || starting}>
+          {starting ? 'Starting...' : `🎱 Start Draft Royale (${selected.size} players)`}
         </button>
       </div>
     </div>

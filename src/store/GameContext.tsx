@@ -1,17 +1,19 @@
 import {
-  createContext, useContext, useReducer, useState, ReactNode,
-  useEffect, useRef, useCallback,
+  createContext, useContext, useReducer, useState,
+  ReactNode, useEffect, useRef, useCallback,
 } from 'react'
+import { doc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
 import { GameState, GameAction } from '../types/game'
 import { gameReducer, initialState } from './gameReducer'
-import { supabase } from '../lib/supabase'
 
 interface GameContextValue {
   state: GameState
   dispatch: React.Dispatch<GameAction>
   gameId: string | null
+  leagueId: string | null
   isCommissioner: boolean
-  syncGame: (gameId: string, isCommissioner: boolean) => void
+  syncGame: (leagueId: string, gameId: string, isCommissioner: boolean) => void
   detachGame: () => void
 }
 
@@ -20,13 +22,14 @@ const GameContext = createContext<GameContextValue | null>(null)
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const [gameId, setGameId] = useState<string | null>(null)
+  const [leagueId, setLeagueId] = useState<string | null>(null)
   const [isCommissioner, setIsCommissioner] = useState(false)
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const unsubRef = useRef<(() => void) | null>(null)
   const lastSyncRef = useRef('')
 
-  // ── Commissioner: save state to DB on every meaningful change ──
+  // ── Commissioner: persist state to Firestore on every change ──────────────
   useEffect(() => {
-    if (!gameId || !isCommissioner) return
+    if (!gameId || !leagueId || !isCommissioner) return
     if (state.phase === 'landing' || state.phase === 'setup' || state.phase === 'rules') return
 
     const serialized = JSON.stringify(state)
@@ -34,69 +37,58 @@ export function GameProvider({ children }: { children: ReactNode }) {
     lastSyncRef.current = serialized
 
     const t = setTimeout(() => {
-      supabase
-        .from('games')
-        .update({
-          game_state: state as unknown as Record<string, unknown>,
-          status: state.phase === 'complete' ? 'complete' : 'playing',
-          ...(state.phase === 'complete' ? { completed_at: new Date().toISOString() } : {}),
-        })
-        .eq('id', gameId)
+      const gameRef = doc(db, 'leagues', leagueId, 'games', gameId)
+      updateDoc(gameRef, {
+        gameState: state as unknown as Record<string, unknown>,
+        status: state.phase === 'complete' ? 'complete' : 'playing',
+        ...(state.phase === 'complete' ? { completedAt: new Date().toISOString() } : {}),
+      }).catch(console.error)
     }, 250)
 
     return () => clearTimeout(t)
-  }, [state, gameId, isCommissioner])
+  }, [state, gameId, leagueId, isCommissioner])
 
-  // ── Other players: subscribe to real-time game state updates ──
+  // ── Non-commissioner: subscribe to Firestore real-time updates ─────────────
   useEffect(() => {
-    if (!gameId || isCommissioner) return
+    if (!gameId || !leagueId || isCommissioner) return
+    if (unsubRef.current) unsubRef.current()
 
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
+    // Load initial state
+    getDoc(doc(db, 'leagues', leagueId, 'games', gameId)).then(snap => {
+      const gs = snap.data()?.gameState as GameState | undefined
+      if (gs) dispatch({ type: 'REPLACE_STATE', state: gs })
+    })
 
-    // Load current state first
-    supabase
-      .from('games')
-      .select('game_state')
-      .eq('id', gameId)
-      .single()
-      .then(({ data }) => {
-        if (data?.game_state) {
-          dispatch({ type: 'REPLACE_STATE', state: data.game_state as GameState })
-        }
-      })
+    // Subscribe to changes
+    unsubRef.current = onSnapshot(
+      doc(db, 'leagues', leagueId, 'games', gameId),
+      (snap) => {
+        const gs = snap.data()?.gameState as GameState | undefined
+        if (gs) dispatch({ type: 'REPLACE_STATE', state: gs })
+      }
+    )
 
-    // Then subscribe to changes
-    channelRef.current = supabase
-      .channel(`game-${gameId}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
-        (payload) => {
-          const remote = (payload.new as { game_state: GameState }).game_state
-          if (remote) dispatch({ type: 'REPLACE_STATE', state: remote })
-        }
-      )
-      .subscribe()
+    return () => { if (unsubRef.current) unsubRef.current() }
+  }, [gameId, leagueId, isCommissioner])
 
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current)
-    }
-  }, [gameId, isCommissioner])
-
-  const syncGame = useCallback((gId: string, isCom: boolean) => {
+  const syncGame = useCallback((lId: string, gId: string, isCom: boolean) => {
+    setLeagueId(lId)
     setGameId(gId)
     setIsCommissioner(isCom)
   }, [])
 
   const detachGame = useCallback(() => {
-    if (channelRef.current) supabase.removeChannel(channelRef.current)
+    if (unsubRef.current) unsubRef.current()
     setGameId(null)
+    setLeagueId(null)
     setIsCommissioner(false)
     dispatch({ type: 'NEW_GAME' })
   }, [])
 
   return (
-    <GameContext.Provider value={{ state, dispatch, gameId, isCommissioner, syncGame, detachGame }}>
+    <GameContext.Provider value={{
+      state, dispatch, gameId, leagueId, isCommissioner, syncGame, detachGame,
+    }}>
       {children}
     </GameContext.Provider>
   )
