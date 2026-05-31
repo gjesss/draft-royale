@@ -24,7 +24,7 @@ export default function GameBoard() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-6 pb-3 border-b border-royal-border">
         <div>
-          <h1 className="text-lg font-bold neon-text tracking-wide">DRAFT ROYALE</h1>
+          <h1 className="text-lg font-bold neon-text tracking-wide">DRAFT ROYAL</h1>
           <p className="text-gray-500 text-xs">{ballsLeft} balls remaining</p>
         </div>
         <div className="flex gap-2">

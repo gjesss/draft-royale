@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Draft Royale',
-        short_name: 'DraftRoyale',
+        name: 'Draft Royal',
+        short_name: 'DraftRoyal',
         description: 'Fantasy sports draft order game — defend your pick!',
         theme_color: '#00d4ff',
         background_color: '#0a0a0a',
