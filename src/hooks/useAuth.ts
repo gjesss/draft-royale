@@ -6,12 +6,14 @@ import {
   signOut as fbSignOut,
   onAuthStateChanged,
   sendEmailVerification,
+  signInWithPopup,
+  getRedirectResult,
 } from 'firebase/auth'
 import {
   doc, getDoc, setDoc, query,
   collection, where, getDocs,
 } from 'firebase/firestore'
-import { auth, db } from '../lib/firebase'
+import { auth, db, googleProvider } from '../lib/firebase'
 import { UserProfile } from '../types/db'
 
 interface AuthState {
@@ -61,6 +63,27 @@ export function useAuth() {
 
   const signOut = () => fbSignOut(auth)
 
+  const signInWithGoogle = async () => {
+    try {
+      const cred = await signInWithPopup(auth, googleProvider)
+      // If new Google user, auto-create a profile from their Google display name
+      const profile = await fetchProfile(cred.user.uid)
+      if (!profile && cred.user.displayName) {
+        const base = cred.user.displayName.toLowerCase().replace(/[^a-z0-9]/g, '')
+        const username = base.slice(0, 20) || `user${Date.now().toString().slice(-6)}`
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          uid: cred.user.uid,
+          username,
+          displayName: cred.user.displayName,
+          createdAt: new Date().toISOString(),
+        })
+      }
+      return { data: cred, error: null }
+    } catch (e: unknown) {
+      return { data: null, error: e as Error }
+    }
+  }
+
   const createProfile = async (uid: string, username: string, displayName: string) => {
     try {
       const profile: UserProfile = {
@@ -88,6 +111,7 @@ export function useAuth() {
     signUp,
     signIn,
     signOut,
+    signInWithGoogle,
     createProfile,
     isUsernameAvailable,
   }

@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   html, body, #root {
     @apply h-full;
     background-color: #0a0a0a;
@@ -12,73 +17,85 @@
     overscroll-behavior: none;
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
-  /* Prevent iOS rubber-band scroll */
+  /* Full-screen fixed scroll container */
   #root {
     position: fixed;
     width: 100%;
+    top: 0;
+    left: 0;
+    bottom: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Respect notch / home indicator */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Inputs: prevent iOS zoom on focus (needs ≥16px font) */
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }
 
 @layer components {
+  /* ── Buttons ─────────────────────────────────────────── */
   .btn-primary {
     @apply bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 px-6 rounded-xl
            transition-all duration-200 active:scale-95 shadow-neon
            disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+    min-height: 48px; /* iOS min touch target */
   }
 
   .btn-ghost {
     @apply border border-gray-600 hover:border-cyan-500 text-gray-300 hover:text-cyan-400
            font-medium py-3 px-6 rounded-xl transition-all duration-200 active:scale-95;
+    min-height: 48px;
   }
 
   .btn-danger {
     @apply bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl
            transition-all duration-200 active:scale-95;
+    min-height: 48px;
   }
 
+  /* ── Cards ───────────────────────────────────────────── */
   .card {
     @apply bg-royal-card border border-royal-border rounded-2xl p-4;
   }
 
+  /* ── Text ────────────────────────────────────────────── */
   .neon-text {
     @apply text-cyan-400;
     text-shadow: 0 0 10px #00d4ff80;
   }
 
-  .crown-badge {
-    @apply inline-flex items-center justify-center w-5 h-5 rounded-full
-           bg-yellow-500 text-black text-xs font-bold;
-  }
-
+  /* ── Modals ──────────────────────────────────────────── */
   .modal-backdrop {
     @apply fixed inset-0 bg-black/80 backdrop-blur-sm z-50
-           flex items-end sm:items-center justify-center p-0 sm:p-4;
+           flex items-end sm:items-center justify-center;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .modal-panel {
     @apply bg-royal-card border border-royal-border rounded-t-3xl sm:rounded-3xl
-           w-full sm:max-w-lg max-h-[90vh] overflow-y-auto animate-slide-up;
+           w-full sm:max-w-lg overflow-y-auto animate-slide-up;
+    max-height: 92dvh; /* dynamic viewport height — accounts for browser chrome */
   }
 
-  .pick-badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold;
+  /* ── Safe-area bottom padding utility ────────────────── */
+  .safe-bottom {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+  .pb-safe {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 2px;
-}
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
