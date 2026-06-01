@@ -1,6 +1,6 @@
 export type GamePhase = 'landing' | 'rules' | 'setup' | 'playing' | 'complete';
 export type BallType = 'pick' | 'pick-swap' | 'shotgun';
-export type ChallengeGame = 'beer-pong' | 'quarters' | 'flip-cup' | 'holdem';
+export type ChallengeGame = 'beer-pong' | 'quarters' | 'flip-cup' | 'holdem' | 'high-card';
 
 // ─── Ball pool ───────────────────────────────────────────────────────────────
 export interface Ball {

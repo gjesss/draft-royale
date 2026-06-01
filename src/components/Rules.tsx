@@ -115,9 +115,13 @@ export default function Rules({ onBack }: RulesProps) {
               <p className="text-white font-semibold">🥤 Flip Cup 1v1 <span className="text-gray-500 font-normal">(3 cups)</span></p>
               <p className="text-gray-400">Chug your beer, then first to successfully flip all 3 cups wins.</p>
             </div>
-            <div>
+            <div className="border-b border-royal-border pb-3">
               <p className="text-white font-semibold">🃏 Hold'em</p>
               <p className="text-gray-400">Deal one hand (no betting). Flop → Turn → River (burn a card each). Best hand wins. Ties broken by high card playoff.</p>
+            </div>
+            <div>
+              <p className="text-white font-semibold">🂠 High Card</p>
+              <p className="text-gray-400">Each player draws a single card. Highest card wins the pick swap. Re-draw if it's a tie.</p>
             </div>
           </div>
         </div>

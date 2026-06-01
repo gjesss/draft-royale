@@ -6,7 +6,7 @@ interface Props {
   challenge: Challenge;
 }
 
-const GAMES: ChallengeGame[] = ['beer-pong', 'quarters', 'flip-cup', 'holdem'];
+const GAMES: ChallengeGame[] = ['beer-pong', 'quarters', 'flip-cup', 'holdem', 'high-card'];
 
 export default function ChallengeModal({ challenge }: Props) {
   const { state, dispatch } = useGame();

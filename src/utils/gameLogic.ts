@@ -96,6 +96,11 @@ export const CHALLENGE_GAME_DISPLAY: Record<string, { label: string; emoji: stri
     emoji: '🃏',
     description: 'Deal one hand · best hand wins · tie → high card playoff',
   },
+  'high-card': {
+    label: 'High Card',
+    emoji: '🂠',
+    description: 'Each player draws one card · highest card wins · re-draw on a tie',
+  },
 };
 
 // ─── Derived state helpers ────────────────────────────────────────────────────
