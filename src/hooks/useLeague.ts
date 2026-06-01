@@ -10,6 +10,7 @@ import {
   League, LeagueMember, LeagueInvite,
   Season, Game, DraftResult,
 } from '../types/db'
+import { DEV_PREVIEW, mockLeagues, mockFullLeague, mockGamesFor, mockHistory } from '../devMock'
 
 function nowIso() { return new Date().toISOString() }
 function expiresIso(days = 7) {
@@ -29,6 +30,7 @@ export function useMyLeagues(userId: string | null) {
   const [loading, setLoading] = useState(true)
 
   const fetch = useCallback(async () => {
+    if (DEV_PREVIEW) { setLeagues(mockLeagues); setLoading(false); return }
     if (!userId) { setLoading(false); return }
     // leagues where user is a member
     const memberSnaps = await getDocs(
@@ -65,6 +67,12 @@ export function useLeague(leagueId: string | null) {
 
   const fetchLeague = useCallback(async () => {
     if (!leagueId) return
+    if (DEV_PREVIEW) {
+      setLeague(mockFullLeague(leagueId) as FullLeague)
+      setGames(mockGamesFor(leagueId))
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const [leagueSnap, membersSnap, seasonsSnap, gamesSnap] = await Promise.all([
@@ -203,6 +211,7 @@ export function useDraftHistory(leagueId: string | null) {
 
   useEffect(() => {
     if (!leagueId) return
+    if (DEV_PREVIEW) { setHistory(mockHistory); setLoading(false); return }
     getDocs(
       query(
         collection(db, 'leagues', leagueId, 'draftResults'),

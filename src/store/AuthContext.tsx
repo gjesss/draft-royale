@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../lib/firebase'
 import { UserProfile } from '../types/db'
+import { DEV_PREVIEW, mockUser, mockProfile } from '../devMock'
 
 interface AuthContextType {
   user: User | null
@@ -31,9 +32,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(DEV_PREVIEW ? mockUser : null)
+  const [profile, setProfile] = useState<UserProfile | null>(DEV_PREVIEW ? mockProfile : null)
+  const [loading, setLoading] = useState(!DEV_PREVIEW)
 
   const fetchProfile = useCallback(async (uid: string): Promise<UserProfile | null> => {
     const snap = await getDoc(doc(db, 'users', uid))
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (DEV_PREVIEW) return
     return onAuthStateChanged(auth, async (u) => {
       setUser(u)
       if (u) {

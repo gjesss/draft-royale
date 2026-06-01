@@ -48,20 +48,24 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-lg mx-auto">
-      <div className="flex items-center gap-3 px-4 pt-8 pb-4">
-        <TrophyIcon size={48} />
-        <div>
-          <h1 className="text-xl font-bold leading-none tracking-wide">
-            <span className="text-white">DRAFT</span>{' '}
-            <span className="neon-text">ROYALE</span>
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">@{profile?.username ?? '...'}</p>
-        </div>
+    <div className="max-w-lg mx-auto px-4 pt-8 pb-28">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold tracking-wide">
+          <span className="text-white">DRAFT</span>{' '}
+          <span className="neon-text">ROYALE</span>
+        </h1>
+        <span className="text-gray-500 text-sm">@{profile?.username ?? '...'}</span>
       </div>
 
-      <div className="flex-1 px-4 py-2 space-y-3">
-        <p className="text-gray-400 text-sm uppercase tracking-wide font-medium">My Leagues</p>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-gray-400 text-sm uppercase tracking-wide font-medium">My Leagues</p>
+          {!showCreate && leagues.length > 0 && (
+            <button className="text-cyan-400 text-sm font-medium" onClick={() => setShowCreate(true)}>
+              + New
+            </button>
+          )}
+        </div>
 
         {loading ? (
           <div className="text-center py-10 text-gray-600">Loading...</div>
@@ -90,11 +94,10 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
             </button>
           ))
         )}
-      </div>
 
-      <div className="px-4 pb-8 pt-4 space-y-3 border-t border-royal-border">
-        {showCreate ? (
-          <div className="card space-y-3">
+        {/* Create form (inline) */}
+        {showCreate && (
+          <div className="card space-y-3 border-cyan-500/30 mt-2">
             <h3 className="font-bold text-white">New League</h3>
             <input type="text" placeholder="League name" value={newName}
               onChange={e => setNewName(e.target.value)}
@@ -116,8 +119,13 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
               </button>
             </div>
           </div>
-        ) : (
-          <button className="btn-primary w-full py-3.5" onClick={() => setShowCreate(true)}>+ Create League</button>
+        )}
+
+        {/* Primary create button when no leagues yet */}
+        {!showCreate && leagues.length === 0 && (
+          <button className="btn-primary w-full py-3.5" onClick={() => setShowCreate(true)}>
+            + Create League
+          </button>
         )}
       </div>
     </div>

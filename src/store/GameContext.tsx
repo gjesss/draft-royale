@@ -6,6 +6,7 @@ import { doc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { GameState, GameAction } from '../types/game'
 import { gameReducer, initialState } from './gameReducer'
+import { DEV_PREVIEW } from '../devMock'
 
 interface GameContextValue {
   state: GameState
@@ -29,6 +30,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ── Commissioner: persist state to Firestore on every change ──────────────
   useEffect(() => {
+    if (DEV_PREVIEW) return
     if (!gameId || !leagueId || !isCommissioner) return
     if (state.phase === 'landing' || state.phase === 'setup' || state.phase === 'rules') return
 
@@ -50,6 +52,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ── Non-commissioner: subscribe to Firestore real-time updates ─────────────
   useEffect(() => {
+    if (DEV_PREVIEW) return
     if (!gameId || !leagueId || isCommissioner) return
     if (unsubRef.current) unsubRef.current()
 
