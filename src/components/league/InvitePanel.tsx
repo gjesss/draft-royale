@@ -28,7 +28,7 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
 
   /** Pre-filled message used for SMS / share sheet */
   const messageFor = (token: string) =>
-    `🏆 Join my league "${leagueName}" on Draft Royal!\n\n` +
+    `🏆 Join my league "${leagueName}" on Draft Royale!\n\n` +
     `Tap to join: ${linkFor(token)}\n\n` +
     `Or enter code ${token} in the app.`
 
@@ -40,7 +40,7 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
   const shareSheet = async (token: string) => {
     const text = messageFor(token)
     if (navigator.share) {
-      await navigator.share({ title: `Join ${leagueName} on Draft Royal`, text }).catch(() => {})
+      await navigator.share({ title: `Join ${leagueName} on Draft Royale`, text }).catch(() => {})
     } else {
       copy(text, token)
     }

@@ -37,7 +37,7 @@ export default function Landing() {
         </h1>
         <h1 className="text-5xl font-bold tracking-widest uppercase mb-4"
           style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.15em' }}>
-          <span className="neon-text">ROYAL</span>
+          <span className="neon-text">ROYALE</span>
         </h1>
 
         <p className="text-gray-400 text-sm max-w-xs mx-auto leading-relaxed">

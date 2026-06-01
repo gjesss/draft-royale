@@ -7,18 +7,18 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['logo.png', 'logo-192.png', 'logo-512.png'],
       manifest: {
-        name: 'Draft Royal',
-        short_name: 'DraftRoyal',
+        name: 'Draft Royale',
+        short_name: 'DraftRoyale',
         description: 'Fantasy sports draft order game — defend your pick!',
         theme_color: '#00d4ff',
         background_color: '#0a0a0a',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
-          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: 'logo-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       }
     })

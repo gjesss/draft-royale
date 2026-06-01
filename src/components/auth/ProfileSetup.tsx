@@ -32,7 +32,7 @@ export default function ProfileSetup() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-center text-center mb-8">
-        <TrophyIcon size={48} />
+        <TrophyIcon size={110} />
         <h2 className="text-2xl font-bold text-white mt-4">Set up your profile</h2>
         <p className="text-gray-400 text-sm mt-1">Choose a username for your leagues</p>
       </div>

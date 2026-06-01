@@ -63,7 +63,7 @@ export default function AuthScreen({ redirectNote }: Props) {
     <div className="min-h-screen flex flex-col items-center justify-center p-5 safe-bottom">
       {/* Logo */}
       <div className="text-center mb-8">
-        <LogoMark size={56} />
+        <LogoMark size={190} />
         {redirectNote && (
           <p className="mt-3 text-cyan-400 text-sm bg-cyan-900/20 border border-cyan-800 rounded-xl px-4 py-2">
             {redirectNote}

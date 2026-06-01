@@ -50,13 +50,13 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
       <div className="flex items-center gap-3 px-4 pt-8 pb-4">
-        <TrophyIcon size={36} />
+        <TrophyIcon size={48} />
         <div>
-          <h1 className="text-2xl font-bold leading-none">
+          <h1 className="text-xl font-bold leading-none tracking-wide">
             <span className="text-white">DRAFT</span>{' '}
-            <span className="neon-text">ROYAL</span>
+            <span className="neon-text">ROYALE</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-0.5">@{profile?.username ?? '...'}</p>
+          <p className="text-gray-500 text-sm mt-1">@{profile?.username ?? '...'}</p>
         </div>
       </div>
 

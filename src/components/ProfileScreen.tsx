@@ -92,9 +92,9 @@ export default function ProfileScreen({ onOpenRules }: Props) {
       {/* Settings list */}
       <div className="card mb-4 divide-y divide-royal-border">
         <SettingsRow icon="📖" label="How to Play" onClick={onOpenRules} />
-        <SettingsRow icon="⭐" label="Rate Draft Royal" onClick={() => {}} />
+        <SettingsRow icon="⭐" label="Rate Draft Royale" onClick={() => {}} />
         <SettingsRow icon="💬" label="Send Feedback"
-          onClick={() => { window.location.href = 'mailto:feedback@draftroyal.app?subject=Draft Royal Feedback' }} />
+          onClick={() => { window.location.href = 'mailto:feedback@draftroyale.app?subject=Draft Royale Feedback' }} />
       </div>
 
       {/* Sign out */}
@@ -108,7 +108,7 @@ export default function ProfileScreen({ onOpenRules }: Props) {
 
       <div className="flex items-center justify-center gap-2 mt-8 opacity-40">
         <TrophyIcon size={20} />
-        <span className="text-gray-600 text-xs">Draft Royal · v1.0</span>
+        <span className="text-gray-600 text-xs">Draft Royale · v1.0</span>
       </div>
     </div>
   )
