@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../store/AuthContext'
+import { LogoMark } from '../Logo'
 
 type Mode = 'login' | 'register'
 
@@ -62,10 +63,7 @@ export default function AuthScreen({ redirectNote }: Props) {
     <div className="min-h-screen flex flex-col items-center justify-center p-5 safe-bottom">
       {/* Logo */}
       <div className="text-center mb-8">
-        <span className="text-5xl">👑</span>
-        <h1 className="text-4xl font-bold mt-3 tracking-widest" style={{ fontFamily: 'Georgia, serif' }}>
-          <span className="text-white">DRAFT</span><span className="neon-text"> ROYAL</span>
-        </h1>
+        <LogoMark size={56} />
         {redirectNote && (
           <p className="mt-3 text-cyan-400 text-sm bg-cyan-900/20 border border-cyan-800 rounded-xl px-4 py-2">
             {redirectNote}

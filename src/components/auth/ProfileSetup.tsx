@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../store/AuthContext'
+import { TrophyIcon } from '../Logo'
 
 export default function ProfileSetup() {
   const { user, createProfile, isUsernameAvailable } = useAuth()
@@ -30,9 +31,9 @@ export default function ProfileSetup() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="text-center mb-8">
-        <span className="text-5xl">👑</span>
-        <h2 className="text-2xl font-bold text-white mt-3">Set up your profile</h2>
+      <div className="flex flex-col items-center text-center mb-8">
+        <TrophyIcon size={48} />
+        <h2 className="text-2xl font-bold text-white mt-4">Set up your profile</h2>
         <p className="text-gray-400 text-sm mt-1">Choose a username for your leagues</p>
       </div>
       <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-3">

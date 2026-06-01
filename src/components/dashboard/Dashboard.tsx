@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { doc, setDoc, addDoc, collection } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../store/AuthContext'
 import { useMyLeagues } from '../../hooks/useLeague'
-import { League } from '../../types/db'
+import { TrophyIcon } from '../Logo'
 
 interface Props {
   onSelectLeague: (leagueId: string) => void
@@ -13,7 +13,7 @@ interface Props {
 const SPORTS = ['Fantasy Football', 'Fantasy Basketball', 'Fantasy Baseball', 'Fantasy Hockey', 'Other']
 
 export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile } = useAuth()
   const { leagues, loading, refresh } = useMyLeagues(user?.uid ?? null)
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
@@ -49,17 +49,15 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
-      <div className="flex items-center justify-between px-4 pt-8 pb-4">
+      <div className="flex items-center gap-3 px-4 pt-8 pb-4">
+        <TrophyIcon size={36} />
         <div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold leading-none">
             <span className="text-white">DRAFT</span>{' '}
-            <span className="neon-text">ROYALE</span>
+            <span className="neon-text">ROYAL</span>
           </h1>
-          <p className="text-gray-500 text-sm">@{profile?.username ?? '...'} 👑</p>
+          <p className="text-gray-500 text-sm mt-0.5">@{profile?.username ?? '...'}</p>
         </div>
-        <button className="text-gray-500 hover:text-red-400 text-sm py-2 px-3" onClick={signOut}>
-          Sign out
-        </button>
       </div>
 
       <div className="flex-1 px-4 py-2 space-y-3">
@@ -71,7 +69,7 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
           <div className="card text-center py-8">
             <p className="text-4xl mb-3">🏈</p>
             <p className="text-gray-400">No leagues yet.</p>
-            <p className="text-gray-600 text-sm mt-1">Create one or join via an invite link.</p>
+            <p className="text-gray-600 text-sm mt-1">Create one, or tap Join to enter a code.</p>
           </div>
         ) : (
           leagues.map(l => (
@@ -119,10 +117,7 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
             </div>
           </div>
         ) : (
-          <>
-            <button className="btn-primary w-full py-3.5" onClick={() => setShowCreate(true)}>+ Create League</button>
-            <button className="btn-ghost w-full py-3" onClick={onJoinViaToken}>🔗 Join via Invite Link</button>
-          </>
+          <button className="btn-primary w-full py-3.5" onClick={() => setShowCreate(true)}>+ Create League</button>
         )}
       </div>
     </div>

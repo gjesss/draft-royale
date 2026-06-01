@@ -15,9 +15,12 @@ function nowIso() { return new Date().toISOString() }
 function expiresIso(days = 7) {
   const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString()
 }
+// 6-char uppercase join code — short enough to type, clean in a text message.
+// Excludes ambiguous chars (0/O, 1/I/L) so codes read clearly over SMS.
 function randomToken() {
-  return Array.from(crypto.getRandomValues(new Uint8Array(18)))
-    .map(b => b.toString(16).padStart(2, '0')).join('')
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+    .map(b => chars[b % chars.length]).join('')
 }
 
 // ── User's league list ────────────────────────────────────────────────────────

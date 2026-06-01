@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { lookupInviteToken, acceptInvite } from '../../hooks/useLeague'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../store/AuthContext'
 
 interface Props {
   token: string

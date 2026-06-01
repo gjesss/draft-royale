@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../store/AuthContext'
 import { useLeague } from '../../hooks/useLeague'
 import InvitePanel from './InvitePanel'
 import GameHistory from './GameHistory'

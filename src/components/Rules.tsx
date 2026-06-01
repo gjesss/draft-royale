@@ -1,18 +1,28 @@
 import { useGame } from '../store/GameContext';
 
-export default function Rules() {
+interface RulesProps {
+  /** When provided, the back button calls this instead of dispatching a game navigation. */
+  onBack?: () => void;
+}
+
+export default function Rules({ onBack }: RulesProps) {
   const { state, dispatch } = useGame();
+
+  const handleBack = () => {
+    if (onBack) onBack();
+    else dispatch({ type: 'NAVIGATE', phase: state.phase === 'rules' ? 'landing' : state.phase });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-royal-border sticky top-0 bg-royal-dark z-10">
         <button
           className="text-gray-400 hover:text-white p-2 -ml-2"
-          onClick={() => dispatch({ type: 'NAVIGATE', phase: state.phase === 'rules' ? 'landing' : state.phase })}
+          onClick={handleBack}
         >
           ← Back
         </button>
-        <h2 className="text-xl font-bold neon-text">Rules</h2>
+        <h2 className="text-xl font-bold neon-text">How to Play</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 max-w-lg mx-auto w-full">
