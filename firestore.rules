@@ -65,8 +65,11 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
         allow create: if request.auth != null &&
           get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+        // Live turn-based play: ANY league member may advance the shared game
+        // state (the app gates who can act on their turn). Last-write-wins is
+        // acceptable because turns are serialized in the UI.
         allow update: if request.auth != null &&
-          resource.data.commissionerId == request.auth.uid;
+          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
       }
 
       // ── Draft results subcollection ────────────────────────

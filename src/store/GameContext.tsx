@@ -26,72 +26,72 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [leagueId, setLeagueId] = useState<string | null>(null)
   const [isCommissioner, setIsCommissioner] = useState(false)
   const unsubRef = useRef<(() => void) | null>(null)
+  /** Serialized form of the last state we either wrote or received. Local
+   *  changes differ from this → we write; remote echoes match → we skip. */
   const lastSyncRef = useRef('')
 
-  // ── Commissioner: persist state to Firestore on every change ──────────────
+  // ── Persist any LOCAL change to Firestore (live multiplayer) ───────────────
+  // Whoever performed the action (UI-gated to the right player) is the writer.
   useEffect(() => {
     if (DEV_PREVIEW) return
-    if (!gameId || !leagueId || !isCommissioner) return
+    if (!gameId || !leagueId) return
     if (state.phase === 'landing' || state.phase === 'setup' || state.phase === 'rules') return
 
     const serialized = JSON.stringify(state)
-    if (serialized === lastSyncRef.current) return
+    if (serialized === lastSyncRef.current) return // unchanged or applied-from-remote
     lastSyncRef.current = serialized
 
     const t = setTimeout(() => {
-      const gameRef = doc(db, 'leagues', leagueId, 'games', gameId)
-      updateDoc(gameRef, {
+      updateDoc(doc(db, 'leagues', leagueId, 'games', gameId), {
         gameState: state as unknown as Record<string, unknown>,
         status: state.phase === 'complete' ? 'complete' : 'playing',
         ...(state.phase === 'complete' ? { completedAt: new Date().toISOString() } : {}),
       }).catch(console.error)
-    }, 250)
+    }, 150)
 
     return () => clearTimeout(t)
-  }, [state, gameId, leagueId, isCommissioner])
+  }, [state, gameId, leagueId])
 
-  // ── Non-commissioner: subscribe to Firestore real-time updates ─────────────
+  // ── Subscribe to remote updates (all clients) ──────────────────────────────
   useEffect(() => {
     if (DEV_PREVIEW) return
-    if (!gameId || !leagueId || isCommissioner) return
+    if (!gameId || !leagueId) return
     if (unsubRef.current) unsubRef.current()
 
-    // Load initial state
+    // Initial load
     getDoc(doc(db, 'leagues', leagueId, 'games', gameId)).then(snap => {
       const gs = snap.data()?.gameState as GameState | undefined
-      if (gs) dispatch({ type: 'REPLACE_STATE', state: gs })
+      if (gs) {
+        lastSyncRef.current = JSON.stringify(gs) // mark as known so we don't re-write
+        dispatch({ type: 'REPLACE_STATE', state: gs })
+      }
     })
 
-    // Subscribe to changes
-    unsubRef.current = onSnapshot(
-      doc(db, 'leagues', leagueId, 'games', gameId),
-      (snap) => {
-        const gs = snap.data()?.gameState as GameState | undefined
-        if (gs) dispatch({ type: 'REPLACE_STATE', state: gs })
-      }
-    )
+    unsubRef.current = onSnapshot(doc(db, 'leagues', leagueId, 'games', gameId), (snap) => {
+      const gs = snap.data()?.gameState as GameState | undefined
+      if (!gs) return
+      const serialized = JSON.stringify(gs)
+      if (serialized === lastSyncRef.current) return // our own echo or no change
+      lastSyncRef.current = serialized
+      dispatch({ type: 'REPLACE_STATE', state: gs })
+    })
 
     return () => { if (unsubRef.current) unsubRef.current() }
-  }, [gameId, leagueId, isCommissioner])
+  }, [gameId, leagueId])
 
   const syncGame = useCallback((lId: string, gId: string, isCom: boolean) => {
-    setLeagueId(lId)
-    setGameId(gId)
-    setIsCommissioner(isCom)
+    setLeagueId(lId); setGameId(gId); setIsCommissioner(isCom)
   }, [])
 
   const detachGame = useCallback(() => {
     if (unsubRef.current) unsubRef.current()
-    setGameId(null)
-    setLeagueId(null)
-    setIsCommissioner(false)
+    lastSyncRef.current = ''
+    setGameId(null); setLeagueId(null); setIsCommissioner(false)
     dispatch({ type: 'NEW_GAME' })
   }, [])
 
   return (
-    <GameContext.Provider value={{
-      state, dispatch, gameId, leagueId, isCommissioner, syncGame, detachGame,
-    }}>
+    <GameContext.Provider value={{ state, dispatch, gameId, leagueId, isCommissioner, syncGame, detachGame }}>
       {children}
     </GameContext.Provider>
   )

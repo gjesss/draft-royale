@@ -102,6 +102,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         pendingChallengePickPosition: null,
         isBot: !!p.isBot,
         present: true,
+        uid: p.uid,
       }));
 
       const pickSlots: PickSlot[] = players.map((_, i) => ({

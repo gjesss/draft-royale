@@ -31,7 +31,7 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
     setStarting(true)
     const gamePlayers = members
       .filter(m => selected.has(m.userId))
-      .map(m => ({ name: names[m.userId]?.trim() || m.username }))
+      .map(m => ({ name: names[m.userId]?.trim() || m.username, uid: m.userId }))
 
     await updateDoc(doc(db, 'leagues', leagueId, 'games', gameId), { status: 'playing' })
     syncGame(leagueId, gameId, isCommissioner)

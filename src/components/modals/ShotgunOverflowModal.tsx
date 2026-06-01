@@ -1,4 +1,5 @@
 import { useGame } from '../../store/GameContext';
+import { useTurnControl } from '../../hooks/useTurnControl';
 
 interface Props {
   playerId: string;
@@ -6,8 +7,24 @@ interface Props {
 
 export default function ShotgunOverflowModal({ playerId }: Props) {
   const { state, dispatch } = useGame();
+  const { canActAs } = useTurnControl();
   const giver = state.players.find(p => p.id === playerId);
   const eligible = state.players.filter(p => p.id !== playerId && p.shotgunCount < 3);
+
+  if (!canActAs(playerId)) {
+    return (
+      <div className="modal-backdrop">
+        <div className="modal-panel">
+          <div className="p-8 text-center">
+            <p className="text-5xl mb-3">🍺🍺🍺</p>
+            <h2 className="text-2xl font-bold text-orange-400 mb-1">SHOTGUN OVERFLOW</h2>
+            <p className="text-white font-medium">{giver?.name}</p>
+            <p className="text-gray-400 text-sm mt-1">is choosing who to give the extra shotgun to…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modal-backdrop">

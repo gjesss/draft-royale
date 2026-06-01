@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { getLockedPlayerIds } from '../utils/gameLogic';
 import { useMockDriver } from '../hooks/useMockDriver';
+import { useTurnControl } from '../hooks/useTurnControl';
 import ShotgunOverflowModal from './modals/ShotgunOverflowModal';
 import DrawResultModal from './modals/DrawResultModal';
 import ChallengeModal from './modals/ChallengeModal';
@@ -14,17 +15,18 @@ export default function GameBoard() {
   // Drive bot opponents in local mock drafts.
   useMockDriver(state, dispatch);
 
+  const { drawerId, isMyTurn, isCommissioner } = useTurnControl();
+
   const { ballPool, totalBalls, drawnCount, pickSlots, players, modal, activeChallenge } = state;
   const ballsLeft = ballPool.length;
   const pct = totalBalls > 0 ? ((drawnCount / totalBalls) * 100) : 0;
   const lockedIds = getLockedPlayerIds(pickSlots);
 
-  // Whose turn is it to draw?
-  const drawerId = state.turnOrder[state.currentTurnIndex];
   const drawer = players.find(p => p.id === drawerId);
-  // In mock, only the human may press Draw on their turn. (Live gating added later.)
-  const myTurn = !state.isMock || drawerId === state.humanPlayerId;
-  const canDraw = modal === null && !activeChallenge && ballsLeft > 0 && myTurn;
+  const idle = modal === null && !activeChallenge && ballsLeft > 0;
+  const canDraw = idle && isMyTurn;
+  // Commissioner override: act for whoever's turn it is (away players / stalls)
+  const showCommishOverride = idle && !isMyTurn && isCommissioner && !state.isMock;
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
@@ -89,18 +91,36 @@ export default function GameBoard() {
           >
             {ballsLeft === 0
               ? '🎉 Done!'
-              : myTurn ? '🎱 Draw Ball' : `⏳ ${drawer?.name ?? 'Player'}'s turn`}
+              : isMyTurn ? '🎱 Draw Ball' : `⏳ ${drawer?.name ?? 'Player'}'s turn`}
           </button>
         </div>
 
         {/* Turn indicator */}
         {ballsLeft > 0 && !activeChallenge && (
           <div className="mt-3 text-center">
-            {myTurn
+            {isMyTurn
               ? <p className="text-cyan-400 text-sm font-medium">
-                  {state.isMock ? 'Your turn to draw' : `Draw, ${drawer?.name ?? ''}`}
+                  {state.isMock ? 'Your turn to draw' : "You're up — draw a ball"}
                 </p>
               : <p className="text-gray-500 text-sm">Waiting on <span className="text-white font-medium">{drawer?.name}</span>…</p>}
+          </div>
+        )}
+
+        {/* Commissioner override for an away / stalled player */}
+        {showCommishOverride && (
+          <div className="mt-3 flex gap-2 justify-center">
+            <button
+              className="text-sm px-4 py-2 rounded-lg bg-cyan-900/30 text-cyan-300 border border-cyan-800 active:scale-95"
+              onClick={() => dispatch({ type: 'DRAW_BALL' })}
+            >
+              Draw for {drawer?.name}
+            </button>
+            <button
+              className="text-sm px-4 py-2 rounded-lg bg-royal-muted text-gray-300 active:scale-95"
+              onClick={() => dispatch({ type: 'SKIP_TURN' })}
+            >
+              Skip turn
+            </button>
           </div>
         )}
 

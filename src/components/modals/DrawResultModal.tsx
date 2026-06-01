@@ -1,14 +1,18 @@
 import { useGame } from '../../store/GameContext';
 import { BALL_DISPLAY } from '../../utils/gameLogic';
+import { useTurnControl } from '../../hooks/useTurnControl';
 
 export default function DrawResultModal() {
   const { state, dispatch } = useGame();
+  const { drawerId, canActAs } = useTurnControl();
   const modal = state.modal;
   if (modal?.kind !== 'draw-result') return null;
 
   const { ballType, pickedPlayerId, pickedPosition, rule3Redraw, pendingChallengeName } = modal;
   const info = BALL_DISPLAY[ballType];
   const playerName = state.players.find(p => p.id === pickedPlayerId)?.name;
+  const drawerName = state.players.find(p => p.id === drawerId)?.name ?? 'Player';
+  const canAct = canActAs(drawerId);
 
   // Rule 3: pick-swap was put back
   if (rule3Redraw) {
@@ -24,9 +28,9 @@ export default function DrawResultModal() {
             <p className="text-gray-400 text-sm mb-6">
               The pick swap ball was put back into the pool. They must draw again until they get a non-swap ball.
             </p>
-            <button className="btn-primary w-full" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
-              Draw Again
-            </button>
+            {canAct
+              ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>Draw Again</button>
+              : <p className="text-gray-500 text-sm">Waiting for {drawerName}…</p>}
           </div>
         </div>
       </div>
@@ -72,9 +76,11 @@ export default function DrawResultModal() {
             <p className="text-gray-300 mt-3 text-sm">Time to shotgun a beer! 🍻</p>
           )}
 
-          <button className="btn-primary mt-6 w-full" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
-            {pendingChallengeName ? '⚔️ Start Challenge' : 'Got it!'}
-          </button>
+          {canAct
+            ? <button className="btn-primary mt-6 w-full" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
+                {pendingChallengeName ? '⚔️ Start Challenge' : 'Got it!'}
+              </button>
+            : <p className="text-gray-500 text-sm mt-6">Waiting for {drawerName}…</p>}
         </div>
       </div>
     </div>

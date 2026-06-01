@@ -1,6 +1,7 @@
 import { useGame } from '../../store/GameContext';
 import { Challenge, ChallengeGame } from '../../types/game';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
+import { useTurnControl } from '../../hooks/useTurnControl';
 
 interface Props {
   challenge: Challenge;
@@ -10,6 +11,9 @@ const GAMES: ChallengeGame[] = ['beer-pong', 'quarters', 'flip-cup', 'holdem', '
 
 export default function ChallengeModal({ challenge }: Props) {
   const { state, dispatch } = useGame();
+  const { canActAs } = useTurnControl();
+  // Either participant (or commissioner) can pick the game / report the result.
+  const canAct = canActAs(challenge.challengerId) || canActAs(challenge.defenderId);
 
   const challenger = state.players.find(p => p.id === challenge.challengerId);
   const defender = state.players.find(p => p.id === challenge.defenderId);
@@ -60,7 +64,12 @@ export default function ChallengeModal({ challenge }: Props) {
           </div>
 
           {/* Step 1: Choose game */}
-          {challenge.status === 'choosing-game' && (
+          {challenge.status === 'choosing-game' && !canAct && (
+            <p className="text-center text-gray-400 text-sm py-4">
+              {challenger?.name} &amp; {defender?.name} are choosing a game…
+            </p>
+          )}
+          {challenge.status === 'choosing-game' && canAct && (
             <div>
               <p className="text-gray-400 text-sm text-center mb-3">
                 Both players agree on a challenge game:
@@ -99,6 +108,12 @@ export default function ChallengeModal({ challenge }: Props) {
                 </p>
               </div>
 
+              {!canAct && (
+                <p className="text-center text-gray-400 text-sm py-2">
+                  Waiting for the result to be recorded…
+                </p>
+              )}
+              {canAct && (<>
               <p className="text-center text-gray-400 text-sm mb-4">Who won the challenge?</p>
 
               <div className="grid grid-cols-2 gap-3">
@@ -129,6 +144,7 @@ export default function ChallengeModal({ challenge }: Props) {
                   </p>
                 </button>
               </div>
+              </>)}
             </div>
           )}
         </div>

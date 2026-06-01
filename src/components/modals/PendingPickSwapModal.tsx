@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useGame } from '../../store/GameContext';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
 import { ChallengeGame } from '../../types/game';
+import { useTurnControl } from '../../hooks/useTurnControl';
 
 interface Props {
   challengerId: string;
@@ -9,9 +10,26 @@ interface Props {
 
 export default function PendingPickSwapModal({ challengerId }: Props) {
   const { state, dispatch } = useGame();
+  const { canActAs } = useTurnControl();
   const [mode, setMode] = useState<'choose' | 'immediate' | 'future'>('choose');
   const [futurePosition, setFuturePosition] = useState('');
   const challenger = state.players.find(p => p.id === challengerId);
+
+  // Only the player who drew the swap (or commissioner) decides; others watch.
+  if (!canActAs(challengerId)) {
+    return (
+      <div className="modal-backdrop">
+        <div className="modal-panel">
+          <div className="p-8 text-center">
+            <p className="text-5xl mb-2">🔄</p>
+            <h2 className="text-2xl font-bold text-purple-400 mb-2">PICK SWAP</h2>
+            <p className="text-white font-medium">{challenger?.name}</p>
+            <p className="text-gray-400 text-sm mt-1">is deciding what to do with their pick swap…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filled, unlocked slots that aren't held by the challenger
   const challengeableSlots = state.pickSlots.filter(

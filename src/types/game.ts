@@ -35,6 +35,8 @@ export interface Player {
   isBot?: boolean;
   /** Whether the player is currently active in the app (live play). Default true. */
   present?: boolean;
+  /** Auth UID of the league member this player represents (live play). */
+  uid?: string;
 }
 
 // ─── Pick slots ───────────────────────────────────────────────────────────────
@@ -101,7 +103,7 @@ export interface GameState {
 // ─── Reducer actions ──────────────────────────────────────────────────────────
 export type GameAction =
   | { type: 'NAVIGATE'; phase: GamePhase }
-  | { type: 'START_GAME'; players: { name: string; isBot?: boolean }[]; settings: GameSettings; isMock?: boolean }
+  | { type: 'START_GAME'; players: { name: string; isBot?: boolean; uid?: string }[]; settings: GameSettings; isMock?: boolean }
   | { type: 'DRAW_BALL' }
   | { type: 'GIVE_SHOTGUN'; toPlayerId: string }
   | { type: 'SET_PENDING_CHALLENGE'; challengerId: string; targetPosition: number }
