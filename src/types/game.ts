@@ -77,6 +77,13 @@ export type ChallengeStatus =
   | 'in-progress'        // real-life game being played
   | 'resolving';         // recording winner
 
+export type Suit = 'spades' | 'hearts' | 'diamonds' | 'clubs';
+export interface Card { rank: number; suit: Suit } // rank 2–14 (11=J 12=Q 13=K 14=A)
+
+/** Per-game in-app play state, synced inside the challenge. */
+export type MiniState =
+  | { kind: 'high-card'; challenger: Card; defender: Card };
+
 export interface Challenge {
   id: string;
   challengerId: string;
@@ -87,7 +94,12 @@ export interface Challenge {
   challengerPreviousPickPosition: number | null;
   gameType: ChallengeGame | null;
   status: ChallengeStatus;
+  /** Digital mini-game state (e.g. dealt cards), when played in the app. */
+  mini?: MiniState | null;
 }
+
+/** Games that are actually playable inside the app (auto-resolve the winner). */
+export const DIGITAL_GAMES: ChallengeGame[] = ['high-card'];
 
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
@@ -132,6 +144,7 @@ export type GameAction =
   | { type: 'SET_PENDING_CHALLENGE'; challengerId: string; targetPosition: number }
   | { type: 'INITIATE_CHALLENGE'; challengerId: string; targetPickPosition: number }
   | { type: 'SELECT_CHALLENGE_GAME'; game: ChallengeGame }
+  | { type: 'DEAL_HIGH_CARD' }
   | { type: 'RESOLVE_CHALLENGE'; challengerWon: boolean }
   | { type: 'SKIP_TURN' }
   | { type: 'SET_PRESENCE'; playerId: string; present: boolean }

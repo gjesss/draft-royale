@@ -1,4 +1,18 @@
-import { Ball, BallType, GameState, PickSlot, Player } from '../types/game';
+import { Ball, BallType, GameState, PickSlot, Player, Card, Suit } from '../types/game';
+
+// ─── Cards (High Card, Hold'em) ─────────────────────────────────────────────
+const SUITS: Suit[] = ['spades', 'hearts', 'diamonds', 'clubs'];
+export const SUIT_SYMBOL: Record<Suit, string> = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
+
+export function randomCard(): Card {
+  const rank = 2 + Math.floor(Math.random() * 13); // 2..14
+  const suit = SUITS[Math.floor(Math.random() * 4)];
+  return { rank, suit };
+}
+
+export function rankLabel(rank: number): string {
+  return ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' } as Record<number, string>)[rank] ?? String(rank);
+}
 
 // ─── Ball pool builder ────────────────────────────────────────────────────────
 let _ballCounter = 0;

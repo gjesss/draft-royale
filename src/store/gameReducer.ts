@@ -9,7 +9,7 @@ import {
   DEFAULT_SETTINGS,
   resolveBallCounts,
 } from '../types/game';
-import { buildBallPool, getNextOpenSlot, getSlotForPlayer, shuffle } from '../utils/gameLogic';
+import { buildBallPool, getNextOpenSlot, getSlotForPlayer, shuffle, randomCard } from '../utils/gameLogic';
 
 // ─── Initial state ────────────────────────────────────────────────────────────
 export const initialState: GameState = {
@@ -281,7 +281,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'SELECT_CHALLENGE_GAME': {
       if (!state.activeChallenge) return state;
-      const updated: Challenge = { ...state.activeChallenge, gameType: action.game as ChallengeGame, status: 'in-progress' };
+      const updated: Challenge = { ...state.activeChallenge, gameType: action.game as ChallengeGame, status: 'in-progress', mini: null };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    // ── Deal cards for an in-app High Card game ────────────────────────────────
+    case 'DEAL_HIGH_CARD': {
+      if (!state.activeChallenge || state.activeChallenge.gameType !== 'high-card') return state;
+      const updated: Challenge = {
+        ...state.activeChallenge,
+        mini: { kind: 'high-card', challenger: randomCard(), defender: randomCard() },
+      };
       return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
     }
 

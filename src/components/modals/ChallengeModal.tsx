@@ -1,7 +1,8 @@
 import { useGame } from '../../store/GameContext';
-import { Challenge, ChallengeGame } from '../../types/game';
+import { Challenge, ChallengeGame, DIGITAL_GAMES } from '../../types/game';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
 import { useTurnControl } from '../../hooks/useTurnControl';
+import HighCardGame from '../games/HighCardGame';
 
 interface Props {
   challenge: Challenge;
@@ -94,8 +95,17 @@ export default function ChallengeModal({ challenge }: Props) {
             </div>
           )}
 
-          {/* Step 2: Game in progress → record winner */}
-          {(challenge.status === 'in-progress' || challenge.status === 'resolving') && challenge.gameType && (
+          {/* Step 2a: Digital game played in-app (auto-resolves) */}
+          {(challenge.status === 'in-progress' || challenge.status === 'resolving')
+            && challenge.gameType && DIGITAL_GAMES.includes(challenge.gameType) && (
+            <>
+              {challenge.gameType === 'high-card' && <HighCardGame challenge={challenge} />}
+            </>
+          )}
+
+          {/* Step 2b: Physical game → manually record winner */}
+          {(challenge.status === 'in-progress' || challenge.status === 'resolving')
+            && challenge.gameType && !DIGITAL_GAMES.includes(challenge.gameType) && (
             <div>
               <div className="bg-black/50 border border-royal-border rounded-xl p-4 mb-5 text-center">
                 <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Game</p>

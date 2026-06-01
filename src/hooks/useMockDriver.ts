@@ -56,7 +56,17 @@ export function useMockDriver(state: GameState, dispatch: React.Dispatch<GameAct
         if (ch.status === 'choosing-game') {
           dispatch({ type: 'SELECT_CHALLENGE_GAME', game: pick(GAMES) })
         } else if (ch.status === 'in-progress' || ch.status === 'resolving') {
-          dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: Math.random() < 0.5 })
+          // Digital High Card: deal, re-deal on tie, resolve by rank.
+          if (ch.gameType === 'high-card') {
+            const m = ch.mini?.kind === 'high-card' ? ch.mini : null
+            if (!m || m.challenger.rank === m.defender.rank) {
+              dispatch({ type: 'DEAL_HIGH_CARD' })
+            } else {
+              dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: m.challenger.rank > m.defender.rank })
+            }
+          } else {
+            dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: Math.random() < 0.5 })
+          }
         }
         return
       }
