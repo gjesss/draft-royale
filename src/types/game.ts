@@ -5,16 +5,39 @@ export type ChallengeGame = 'beer-pong' | 'quarters' | 'flip-cup' | 'holdem' | '
 // ─── Commissioner-configured settings ──────────────────────────────────────────
 export type TurnOrderMode = 'manual' | 'random';
 export type AbsentBehavior = 'skip' | 'commissioner' | 'wait' | 'auto';
+export type BallMode = 'scaled' | 'custom';
 
 export interface GameSettings {
   turnOrderMode: TurnOrderMode;   // how the draw rotation is established
   absentBehavior: AbsentBehavior; // what happens on an away player's turn
+  // ── Ball pool configuration (pick balls are always 1 per player) ──
+  ballMode: BallMode;             // 'scaled' grows with player count, 'custom' = fixed totals
+  swapsPerPlayer: number;         // scaled: pick-swap balls per player
+  shotgunsPerPlayer: number;      // scaled: shotgun balls per player
+  customSwaps: number;            // custom: total pick-swap balls
+  customShotguns: number;         // custom: total shotgun balls
 }
 
 export const DEFAULT_SETTINGS: GameSettings = {
   turnOrderMode: 'random',
   absentBehavior: 'skip',
+  ballMode: 'scaled',
+  swapsPerPlayer: 3,
+  shotgunsPerPlayer: 2,
+  customSwaps: 30,
+  customShotguns: 24,
 };
+
+/** Resolve the actual pick-swap / shotgun counts for a given player count. */
+export function resolveBallCounts(settings: GameSettings, playerCount: number) {
+  if (settings.ballMode === 'custom') {
+    return { pickSwaps: settings.customSwaps, shotguns: settings.customShotguns };
+  }
+  return {
+    pickSwaps: Math.round((settings.swapsPerPlayer ?? 0) * playerCount),
+    shotguns: Math.round((settings.shotgunsPerPlayer ?? 0) * playerCount),
+  };
+}
 
 // ─── Ball pool ───────────────────────────────────────────────────────────────
 export interface Ball {

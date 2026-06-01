@@ -4,7 +4,7 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../store/AuthContext'
 import { useMyLeagues } from '../../hooks/useLeague'
 import { TrophyIcon } from '../Logo'
-import { TurnOrderMode, AbsentBehavior } from '../../types/game'
+import { TurnOrderMode, AbsentBehavior, BallMode } from '../../types/game'
 
 interface Props {
   onSelectLeague: (leagueId: string) => void
@@ -22,6 +22,11 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
   const [newSport, setNewSport] = useState('Fantasy Football')
   const [turnMode, setTurnMode] = useState<TurnOrderMode>('random')
   const [absent, setAbsent] = useState<AbsentBehavior>('skip')
+  const [ballMode, setBallMode] = useState<BallMode>('scaled')
+  const [swapsPP, setSwapsPP] = useState(3)
+  const [shotgunsPP, setShotgunsPP] = useState(2)
+  const [customSwaps, setCustomSwaps] = useState(30)
+  const [customShotguns, setCustomShotguns] = useState(24)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
@@ -33,7 +38,11 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
       const leagueRef = await addDoc(collection(db, 'leagues'), {
         name: newName.trim(), sport: newSport,
         commissionerId: user.uid, createdAt: new Date().toISOString(),
-        settings: { turnOrderMode: turnMode, absentBehavior: absent },
+        settings: {
+          turnOrderMode: turnMode, absentBehavior: absent,
+          ballMode, swapsPerPlayer: swapsPP, shotgunsPerPlayer: shotgunsPP,
+          customSwaps, customShotguns,
+        },
       })
       // Add commissioner as member (subcollection)
       await setDoc(doc(db, 'leagues', leagueRef.id, 'members', user.uid), {
@@ -138,6 +147,30 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
                   <option value="wait">Wait for them</option>
                 </select>
               </div>
+
+              {/* Ball pool */}
+              <div>
+                <label className="text-gray-400 text-xs uppercase tracking-wide">Ball pool</label>
+                <select value={ballMode} onChange={e => setBallMode(e.target.value as BallMode)}
+                  className="w-full mt-1 bg-black/50 border border-royal-border rounded-xl px-4 py-2.5
+                             text-white focus:outline-none focus:border-cyan-500 text-sm">
+                  <option value="scaled">Scale to number of players</option>
+                  <option value="custom">Custom totals</option>
+                </select>
+                <p className="text-gray-600 text-xs mt-1 pl-1">🎯 Name balls are always 1 per player.</p>
+
+                {ballMode === 'scaled' ? (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <BallField label="🔄 Swaps / player" value={swapsPP} onChange={setSwapsPP} max={10} />
+                    <BallField label="🍺 Shotguns / player" value={shotgunsPP} onChange={setShotgunsPP} max={10} />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <BallField label="🔄 Total swaps" value={customSwaps} onChange={setCustomSwaps} max={200} />
+                    <BallField label="🍺 Total shotguns" value={customShotguns} onChange={setCustomShotguns} max={200} />
+                  </div>
+                )}
+              </div>
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -176,6 +209,23 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function BallField({ label, value, onChange, max }: {
+  label: string; value: number; onChange: (n: number) => void; max: number
+}) {
+  return (
+    <div className="bg-black/40 border border-royal-border rounded-xl px-3 py-2">
+      <p className="text-gray-400 text-[11px] mb-1">{label}</p>
+      <div className="flex items-center justify-between">
+        <button type="button" className="w-7 h-7 rounded-lg bg-royal-muted text-lg leading-none active:scale-95"
+          onClick={() => onChange(Math.max(0, value - 1))}>−</button>
+        <span className="text-white font-bold">{value}</span>
+        <button type="button" className="w-7 h-7 rounded-lg bg-royal-muted text-lg leading-none active:scale-95"
+          onClick={() => onChange(Math.min(max, value + 1))}>+</button>
+      </div>
     </div>
   )
 }

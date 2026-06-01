@@ -1,13 +1,15 @@
 import { Ball, BallType, GameState, PickSlot, Player } from '../types/game';
 
 // ─── Ball pool builder ────────────────────────────────────────────────────────
-const PICK_SWAP_COUNT = 30;
-const SHOTGUN_COUNT = 24;
-
 let _ballCounter = 0;
 const uid = () => `b${++_ballCounter}`;
 
-export function buildBallPool(players: Player[]): Ball[] {
+/** Build the can: one pick (name) ball per player, plus the configured number
+ *  of pick-swap and shotgun balls. */
+export function buildBallPool(
+  players: Player[],
+  counts: { pickSwaps: number; shotguns: number } = { pickSwaps: 30, shotguns: 24 },
+): Ball[] {
   const balls: Ball[] = [];
 
   // One pick ball per player (labelled with their id)
@@ -15,11 +17,11 @@ export function buildBallPool(players: Player[]): Ball[] {
     balls.push({ id: uid(), type: 'pick', playerId: p.id });
   }
 
-  for (let i = 0; i < PICK_SWAP_COUNT; i++) {
+  for (let i = 0; i < Math.max(0, counts.pickSwaps); i++) {
     balls.push({ id: uid(), type: 'pick-swap' });
   }
 
-  for (let i = 0; i < SHOTGUN_COUNT; i++) {
+  for (let i = 0; i < Math.max(0, counts.shotguns); i++) {
     balls.push({ id: uid(), type: 'shotgun' });
   }
 

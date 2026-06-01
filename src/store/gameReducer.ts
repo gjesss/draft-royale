@@ -7,6 +7,7 @@ import {
   ChallengeGame,
   GameSettings,
   DEFAULT_SETTINGS,
+  resolveBallCounts,
 } from '../types/game';
 import { buildBallPool, getNextOpenSlot, getSlotForPlayer, shuffle } from '../utils/gameLogic';
 
@@ -93,7 +94,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     // ── Game start ───────────────────────────────────────────────────────────
     case 'START_GAME': {
-      const settings: GameSettings = action.settings ?? DEFAULT_SETTINGS;
+      const settings: GameSettings = { ...DEFAULT_SETTINGS, ...action.settings };
 
       const players: Player[] = action.players.map(p => ({
         id: puid(),
@@ -109,7 +110,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         position: i + 1, playerId: null, defenseCount: 0, locked: false,
       }));
 
-      const ballPool = buildBallPool(players);
+      const ballPool = buildBallPool(players, resolveBallCounts(settings, players.length));
 
       // Establish the draw rotation
       let turnOrder = players.map(p => p.id);

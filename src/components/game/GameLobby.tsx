@@ -3,7 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useGame } from '../../store/GameContext'
 import { LeagueMember } from '../../types/db'
-import { GameSettings, DEFAULT_SETTINGS } from '../../types/game'
+import { GameSettings, DEFAULT_SETTINGS, resolveBallCounts } from '../../types/game'
 
 interface Props {
   gameId: string
@@ -80,6 +80,22 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
           ))}
         </div>
         <p className="text-gray-600 text-xs text-center">{selected.size} player{selected.size !== 1 ? 's' : ''} selected</p>
+
+        {/* Ball pool preview */}
+        {selected.size >= 1 && (() => {
+          const c = resolveBallCounts(settings ?? DEFAULT_SETTINGS, selected.size)
+          const total = selected.size + c.pickSwaps + c.shotguns
+          return (
+            <div className="card bg-black/40 text-center text-sm">
+              <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">The Can — {total} balls</p>
+              <div className="flex justify-center gap-4">
+                <span className="text-cyan-400">🎯 {selected.size}</span>
+                <span className="text-purple-400">🔄 {c.pickSwaps}</span>
+                <span className="text-orange-400">🍺 {c.shotguns}</span>
+              </div>
+            </div>
+          )
+        })()}
       </div>
 
       <div className="px-4 pb-8 pt-4 border-t border-royal-border">

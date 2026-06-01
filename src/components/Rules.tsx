@@ -52,18 +52,22 @@ export default function Rules({ onBack }: RulesProps) {
             <div className="flex items-start gap-3">
               <span className="text-2xl">🔄</span>
               <div>
-                <p className="text-purple-400 font-semibold">Pick Swap <span className="text-gray-500 font-normal text-xs">– 30 balls</span></p>
+                <p className="text-purple-400 font-semibold">Pick Swap <span className="text-gray-500 font-normal text-xs">– set by commissioner</span></p>
                 <p className="text-gray-400 text-sm">Challenge any pick position to a mini-game. Winner takes that pick.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-2xl">🍺</span>
               <div>
-                <p className="text-orange-400 font-semibold">Shotgun <span className="text-gray-500 font-normal text-xs">– 24 balls</span></p>
+                <p className="text-orange-400 font-semibold">Shotgun <span className="text-gray-500 font-normal text-xs">– set by commissioner</span></p>
                 <p className="text-gray-400 text-sm">Shotgun a beer! Max 3 per player. Extras must be gifted to another player.</p>
               </div>
             </div>
           </div>
+          <p className="text-gray-600 text-xs mt-3">
+            The commissioner sets how many pick-swap and shotgun balls are in the can — either scaled to the
+            number of players, or as custom totals. Pick balls are always one per player.
+          </p>
         </div>
 
         {/* Core Rules */}
