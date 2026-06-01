@@ -375,6 +375,65 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
     }
 
+    // ── Flip Cup: alternating flips, first to 3 ────────────────────────────────
+    case 'START_FLIPCUP': {
+      if (!state.activeChallenge || state.activeChallenge.gameType !== 'flip-cup') return state;
+      const updated: Challenge = {
+        ...state.activeChallenge,
+        mini: { kind: 'flip-cup', target: 3, flips: { c: 0, d: 0 }, turn: 'c', phase: 'playing', winner: null, lastAttempt: null },
+      };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'FLIPCUP_ATTEMPT': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'flip-cup' || ch.mini.phase !== 'playing') return state;
+      const m = ch.mini;
+      const flips = { ...m.flips };
+      if (action.success) flips[m.turn] += 1;
+      const lastAttempt = { by: m.turn, success: action.success };
+      if (flips[m.turn] >= m.target) {
+        const updated: Challenge = { ...ch, mini: { ...m, flips, phase: 'done', winner: m.turn, lastAttempt } };
+        return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+      }
+      const updated: Challenge = { ...ch, mini: { ...m, flips, turn: m.turn === 'c' ? 'd' : 'c', lastAttempt } };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    // ── Quarters: alternating bounces, first to 3 (5-min most-made tiebreak) ────
+    case 'START_QUARTERS': {
+      if (!state.activeChallenge || state.activeChallenge.gameType !== 'quarters') return state;
+      const updated: Challenge = {
+        ...state.activeChallenge,
+        mini: { kind: 'quarters', target: 3, makes: { c: 0, d: 0 }, turn: 'c', phase: 'playing', winner: null, startedAt: action.startedAt, lastAttempt: null },
+      };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'QUARTERS_ATTEMPT': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'quarters' || ch.mini.phase !== 'playing') return state;
+      const m = ch.mini;
+      const makes = { ...m.makes };
+      if (action.success) makes[m.turn] += 1;
+      const lastAttempt = { by: m.turn, success: action.success };
+      if (makes[m.turn] >= m.target) {
+        const updated: Challenge = { ...ch, mini: { ...m, makes, phase: 'done', winner: m.turn, lastAttempt } };
+        return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+      }
+      const updated: Challenge = { ...ch, mini: { ...m, makes, turn: m.turn === 'c' ? 'd' : 'c', lastAttempt } };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'QUARTERS_TIMEUP': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'quarters' || ch.mini.phase !== 'playing') return state;
+      const m = ch.mini;
+      const winner: 'c' | 'd' = m.makes.c > m.makes.d ? 'c' : 'd'; // tie defends
+      const updated: Challenge = { ...ch, mini: { ...m, phase: 'done', winner } };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
     // ── Resolve challenge → applies swap / defense, ends the draw cycle ─────────
     case 'RESOLVE_CHALLENGE': {
       if (!state.activeChallenge) return state;

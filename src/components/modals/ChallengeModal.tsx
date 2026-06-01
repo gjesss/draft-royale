@@ -5,6 +5,8 @@ import { useTurnControl } from '../../hooks/useTurnControl';
 import HighCardGame from '../games/HighCardGame';
 import HoldemGame from '../games/HoldemGame';
 import BeerPongGame from '../games/BeerPongGame';
+import FlipCupGame from '../games/FlipCupGame';
+import QuartersGame from '../games/QuartersGame';
 
 interface Props {
   challenge: Challenge;
@@ -104,6 +106,8 @@ export default function ChallengeModal({ challenge }: Props) {
               {challenge.gameType === 'high-card' && <HighCardGame challenge={challenge} />}
               {challenge.gameType === 'holdem' && <HoldemGame challenge={challenge} />}
               {challenge.gameType === 'beer-pong' && <BeerPongGame challenge={challenge} />}
+              {challenge.gameType === 'flip-cup' && <FlipCupGame challenge={challenge} />}
+              {challenge.gameType === 'quarters' && <QuartersGame challenge={challenge} />}
             </>
           )}
 

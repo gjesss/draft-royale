@@ -78,6 +78,28 @@ export function useMockDriver(state: GameState, dispatch: React.Dispatch<GameAct
           return
         }
 
+        // Flip Cup: bots flip on their own turn (even vs a human)
+        if (ch.gameType === 'flip-cup') {
+          const m = ch.mini?.kind === 'flip-cup' ? ch.mini : null
+          if (!m) { if (!humanInvolved) dispatch({ type: 'START_FLIPCUP' }); return }
+          if (m.phase === 'done') { if (!humanInvolved) dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: m.winner === 'c' }); return }
+          const shooterId = m.turn === 'c' ? ch.challengerId : ch.defenderId
+          if (isHuman(shooterId)) return
+          dispatch({ type: 'FLIPCUP_ATTEMPT', success: Math.random() < 0.5 })
+          return
+        }
+
+        // Quarters: bots bounce on their own turn
+        if (ch.gameType === 'quarters') {
+          const m = ch.mini?.kind === 'quarters' ? ch.mini : null
+          if (!m) { if (!humanInvolved) dispatch({ type: 'START_QUARTERS', startedAt: Date.now() }); return }
+          if (m.phase === 'done') { if (!humanInvolved) dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: m.winner === 'c' }); return }
+          const shooterId = m.turn === 'c' ? ch.challengerId : ch.defenderId
+          if (isHuman(shooterId)) return
+          dispatch({ type: 'QUARTERS_ATTEMPT', success: Math.random() < 0.5 })
+          return
+        }
+
         if (humanInvolved) return // other games: human drives
 
         if (ch.status === 'in-progress' || ch.status === 'resolving') {

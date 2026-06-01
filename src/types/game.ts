@@ -95,6 +95,25 @@ export type MiniState =
       winner: 'c' | 'd' | null;
       startedAt: number | null;                // epoch ms for the optional 5-min timer
       lastShot: { made: boolean; cup: number } | null;
+    }
+  | {
+      kind: 'flip-cup';
+      target: number;                          // flips needed to win (3)
+      flips: { c: number; d: number };
+      turn: 'c' | 'd';
+      phase: 'playing' | 'done';
+      winner: 'c' | 'd' | null;
+      lastAttempt: { by: 'c' | 'd'; success: boolean } | null;
+    }
+  | {
+      kind: 'quarters';
+      target: number;                          // makes needed to win (3)
+      makes: { c: number; d: number };
+      turn: 'c' | 'd';
+      phase: 'playing' | 'done';
+      winner: 'c' | 'd' | null;
+      startedAt: number | null;                // 5-min timer
+      lastAttempt: { by: 'c' | 'd'; success: boolean } | null;
     };
 
 export interface Challenge {
@@ -112,7 +131,7 @@ export interface Challenge {
 }
 
 /** Games that are actually playable inside the app (auto-resolve the winner). */
-export const DIGITAL_GAMES: ChallengeGame[] = ['high-card', 'holdem', 'beer-pong'];
+export const DIGITAL_GAMES: ChallengeGame[] = ['high-card', 'holdem', 'beer-pong', 'flip-cup', 'quarters'];
 
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
@@ -163,6 +182,11 @@ export type GameAction =
   | { type: 'START_BEERPONG'; cups: number; timeLimit: boolean; startedAt: number }
   | { type: 'BEERPONG_SHOT'; made: boolean; cup: number }
   | { type: 'BEERPONG_TIMEUP' }
+  | { type: 'START_FLIPCUP' }
+  | { type: 'FLIPCUP_ATTEMPT'; success: boolean }
+  | { type: 'START_QUARTERS'; startedAt: number }
+  | { type: 'QUARTERS_ATTEMPT'; success: boolean }
+  | { type: 'QUARTERS_TIMEUP' }
   | { type: 'RESOLVE_CHALLENGE'; challengerWon: boolean }
   | { type: 'SKIP_TURN' }
   | { type: 'SET_PRESENCE'; playerId: string; present: boolean }
