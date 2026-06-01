@@ -53,10 +53,34 @@ export function useMockDriver(state: GameState, dispatch: React.Dispatch<GameAct
       if (state.activeChallenge) {
         const ch = state.activeChallenge
         const humanInvolved = isHuman(ch.challengerId) || isHuman(ch.defenderId)
-        if (humanInvolved) return // let the human pick the game / report the result
+
         if (ch.status === 'choosing-game') {
-          dispatch({ type: 'SELECT_CHALLENGE_GAME', game: pick(GAMES) })
-        } else if (ch.status === 'in-progress' || ch.status === 'resolving') {
+          if (!humanInvolved) dispatch({ type: 'SELECT_CHALLENGE_GAME', game: pick(GAMES) })
+          return
+        }
+
+        // Beer Pong: bots shoot on THEIR turn even against a human opponent.
+        if (ch.gameType === 'beer-pong') {
+          const m = ch.mini?.kind === 'beer-pong' ? ch.mini : null
+          if (!m) {
+            if (!humanInvolved) dispatch({ type: 'START_BEERPONG', cups: 6, timeLimit: false, startedAt: Date.now() })
+            return
+          }
+          if (m.phase === 'done') {
+            if (!humanInvolved) dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: m.winner === 'c' })
+            return
+          }
+          const shooterId = m.turn === 'c' ? ch.challengerId : ch.defenderId
+          if (isHuman(shooterId)) return // human takes their own shots
+          const targetRack = m.turn === 'c' ? m.racks.d : m.racks.c
+          const present = targetRack.map((v, i) => (v ? i : -1)).filter(i => i >= 0)
+          dispatch({ type: 'BEERPONG_SHOT', made: Math.random() < 0.5, cup: present.length ? pick(present) : 0 })
+          return
+        }
+
+        if (humanInvolved) return // other games: human drives
+
+        if (ch.status === 'in-progress' || ch.status === 'resolving') {
           // Digital High Card: deal, re-deal on tie, resolve by rank.
           if (ch.gameType === 'high-card') {
             const m = ch.mini?.kind === 'high-card' ? ch.mini : null

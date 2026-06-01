@@ -83,7 +83,19 @@ export interface Card { rank: number; suit: Suit } // rank 2–14 (11=J 12=Q 13=
 /** Per-game in-app play state, synced inside the challenge. */
 export type MiniState =
   | { kind: 'high-card'; challenger: Card; defender: Card }
-  | { kind: 'holdem'; cHole: Card[]; dHole: Card[]; community: Card[]; revealed: number }; // revealed: 0|3|4|5
+  | { kind: 'holdem'; cHole: Card[]; dHole: Card[]; community: Card[]; revealed: number } // revealed: 0|3|4|5
+  | {
+      kind: 'beer-pong';
+      config: { cups: number; timeLimit: boolean };
+      racks: { c: boolean[]; d: boolean[] };  // true = cup still standing (c = challenger's own rack)
+      turn: 'c' | 'd';                         // whose 2-shot turn it is
+      shotsLeft: number;                       // shots remaining this turn
+      madeThisTurn: number;                    // makes this turn (for balls-back)
+      phase: 'playing' | 'done';
+      winner: 'c' | 'd' | null;
+      startedAt: number | null;                // epoch ms for the optional 5-min timer
+      lastShot: { made: boolean; cup: number } | null;
+    };
 
 export interface Challenge {
   id: string;
@@ -100,7 +112,7 @@ export interface Challenge {
 }
 
 /** Games that are actually playable inside the app (auto-resolve the winner). */
-export const DIGITAL_GAMES: ChallengeGame[] = ['high-card', 'holdem'];
+export const DIGITAL_GAMES: ChallengeGame[] = ['high-card', 'holdem', 'beer-pong'];
 
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
@@ -148,6 +160,9 @@ export type GameAction =
   | { type: 'DEAL_HIGH_CARD' }
   | { type: 'DEAL_HOLDEM' }
   | { type: 'ADVANCE_HOLDEM' }
+  | { type: 'START_BEERPONG'; cups: number; timeLimit: boolean; startedAt: number }
+  | { type: 'BEERPONG_SHOT'; made: boolean; cup: number }
+  | { type: 'BEERPONG_TIMEUP' }
   | { type: 'RESOLVE_CHALLENGE'; challengerWon: boolean }
   | { type: 'SKIP_TURN' }
   | { type: 'SET_PRESENCE'; playerId: string; present: boolean }

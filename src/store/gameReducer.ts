@@ -314,6 +314,67 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
     }
 
+    // ── Beer Pong: turn-based, 2 shots per turn, balls-back on two makes ───────
+    case 'START_BEERPONG': {
+      if (!state.activeChallenge || state.activeChallenge.gameType !== 'beer-pong') return state;
+      const cups = action.cups;
+      const updated: Challenge = {
+        ...state.activeChallenge,
+        mini: {
+          kind: 'beer-pong',
+          config: { cups, timeLimit: action.timeLimit },
+          racks: { c: Array(cups).fill(true), d: Array(cups).fill(true) },
+          turn: 'c', shotsLeft: 2, madeThisTurn: 0,
+          phase: 'playing', winner: null,
+          startedAt: action.timeLimit ? action.startedAt : null,
+          lastShot: null,
+        },
+      };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'BEERPONG_SHOT': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'beer-pong' || ch.mini.phase !== 'playing') return state;
+      const m = ch.mini;
+      const targetKey = m.turn === 'c' ? 'd' : 'c';
+      const racks = { c: [...m.racks.c], d: [...m.racks.d] };
+      let madeThisTurn = m.madeThisTurn;
+      const made = action.made && racks[targetKey][action.cup] === true;
+      if (made) { racks[targetKey][action.cup] = false; madeThisTurn += 1; }
+      const shotsLeft = m.shotsLeft - 1;
+
+      // Win: target rack cleared
+      if (racks[targetKey].every(c => !c)) {
+        const updated: Challenge = { ...ch, mini: { ...m, racks, madeThisTurn, shotsLeft: 0, phase: 'done', winner: m.turn, lastShot: { made, cup: action.cup } } };
+        return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+      }
+
+      let nextTurn = m.turn, nextShots = shotsLeft, nextMade = madeThisTurn;
+      if (shotsLeft <= 0) {
+        if (madeThisTurn >= 2) { nextShots = 2; nextMade = 0; }       // balls back — same shooter
+        else { nextTurn = m.turn === 'c' ? 'd' : 'c'; nextShots = 2; nextMade = 0; } // pass turn
+      }
+
+      const updated: Challenge = {
+        ...ch,
+        mini: { ...m, racks, turn: nextTurn, shotsLeft: nextShots, madeThisTurn: nextMade, lastShot: { made, cup: action.cup } },
+      };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'BEERPONG_TIMEUP': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'beer-pong' || ch.mini.phase !== 'playing') return state;
+      const m = ch.mini;
+      const cChallengerMade = m.config.cups - m.racks.d.filter(Boolean).length; // challenger shoots rack d
+      const dDefenderMade = m.config.cups - m.racks.c.filter(Boolean).length;
+      // Most cups made wins; tie defends (defender keeps the pick)
+      const winner: 'c' | 'd' = cChallengerMade > dDefenderMade ? 'c' : 'd';
+      const updated: Challenge = { ...ch, mini: { ...m, phase: 'done', winner } };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
     // ── Resolve challenge → applies swap / defense, ends the draw cycle ─────────
     case 'RESOLVE_CHALLENGE': {
       if (!state.activeChallenge) return state;
