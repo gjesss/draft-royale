@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { GameState, GameAction, ChallengeGame } from '../types/game'
+import { holdemWinner } from '../utils/gameLogic'
 
 const GAMES: ChallengeGame[] = ['beer-pong', 'quarters', 'flip-cup', 'holdem', 'high-card']
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)]
@@ -63,6 +64,17 @@ export function useMockDriver(state: GameState, dispatch: React.Dispatch<GameAct
               dispatch({ type: 'DEAL_HIGH_CARD' })
             } else {
               dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: m.challenger.rank > m.defender.rank })
+            }
+          } else if (ch.gameType === 'holdem') {
+            const m = ch.mini?.kind === 'holdem' ? ch.mini : null
+            if (!m) {
+              dispatch({ type: 'DEAL_HOLDEM' })
+            } else if (m.revealed < 5) {
+              dispatch({ type: 'ADVANCE_HOLDEM' })
+            } else {
+              const res = holdemWinner(m.cHole, m.dHole, m.community)
+              if (res.winner === 'tie') dispatch({ type: 'DEAL_HOLDEM' })
+              else dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: res.winner === 'c' })
             }
           } else {
             dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: Math.random() < 0.5 })

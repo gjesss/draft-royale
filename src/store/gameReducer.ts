@@ -9,7 +9,7 @@ import {
   DEFAULT_SETTINGS,
   resolveBallCounts,
 } from '../types/game';
-import { buildBallPool, getNextOpenSlot, getSlotForPlayer, shuffle, randomCard } from '../utils/gameLogic';
+import { buildBallPool, getNextOpenSlot, getSlotForPlayer, shuffle, randomCard, dealHoldem } from '../utils/gameLogic';
 
 // ─── Initial state ────────────────────────────────────────────────────────────
 export const initialState: GameState = {
@@ -292,6 +292,25 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state.activeChallenge,
         mini: { kind: 'high-card', challenger: randomCard(), defender: randomCard() },
       };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    // ── Hold'em: deal a fresh board, and reveal flop/turn/river ────────────────
+    case 'DEAL_HOLDEM': {
+      if (!state.activeChallenge || state.activeChallenge.gameType !== 'holdem') return state;
+      const { cHole, dHole, community } = dealHoldem();
+      const updated: Challenge = {
+        ...state.activeChallenge,
+        mini: { kind: 'holdem', cHole, dHole, community, revealed: 0 },
+      };
+      return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
+    }
+
+    case 'ADVANCE_HOLDEM': {
+      const ch = state.activeChallenge;
+      if (!ch || ch.mini?.kind !== 'holdem') return state;
+      const next = ch.mini.revealed === 0 ? 3 : ch.mini.revealed < 5 ? ch.mini.revealed + 1 : 5;
+      const updated: Challenge = { ...ch, mini: { ...ch.mini, revealed: next } };
       return { ...state, activeChallenge: updated, modal: { kind: 'challenge', challenge: updated } };
     }
 

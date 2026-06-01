@@ -3,6 +3,7 @@ import { Challenge, ChallengeGame, DIGITAL_GAMES } from '../../types/game';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
 import { useTurnControl } from '../../hooks/useTurnControl';
 import HighCardGame from '../games/HighCardGame';
+import HoldemGame from '../games/HoldemGame';
 
 interface Props {
   challenge: Challenge;
@@ -100,6 +101,7 @@ export default function ChallengeModal({ challenge }: Props) {
             && challenge.gameType && DIGITAL_GAMES.includes(challenge.gameType) && (
             <>
               {challenge.gameType === 'high-card' && <HighCardGame challenge={challenge} />}
+              {challenge.gameType === 'holdem' && <HoldemGame challenge={challenge} />}
             </>
           )}
 

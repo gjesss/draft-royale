@@ -82,7 +82,8 @@ export interface Card { rank: number; suit: Suit } // rank 2–14 (11=J 12=Q 13=
 
 /** Per-game in-app play state, synced inside the challenge. */
 export type MiniState =
-  | { kind: 'high-card'; challenger: Card; defender: Card };
+  | { kind: 'high-card'; challenger: Card; defender: Card }
+  | { kind: 'holdem'; cHole: Card[]; dHole: Card[]; community: Card[]; revealed: number }; // revealed: 0|3|4|5
 
 export interface Challenge {
   id: string;
@@ -99,7 +100,7 @@ export interface Challenge {
 }
 
 /** Games that are actually playable inside the app (auto-resolve the winner). */
-export const DIGITAL_GAMES: ChallengeGame[] = ['high-card'];
+export const DIGITAL_GAMES: ChallengeGame[] = ['high-card', 'holdem'];
 
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
@@ -145,6 +146,8 @@ export type GameAction =
   | { type: 'INITIATE_CHALLENGE'; challengerId: string; targetPickPosition: number }
   | { type: 'SELECT_CHALLENGE_GAME'; game: ChallengeGame }
   | { type: 'DEAL_HIGH_CARD' }
+  | { type: 'DEAL_HOLDEM' }
+  | { type: 'ADVANCE_HOLDEM' }
   | { type: 'RESOLVE_CHALLENGE'; challengerWon: boolean }
   | { type: 'SKIP_TURN' }
   | { type: 'SET_PRESENCE'; playerId: string; present: boolean }
