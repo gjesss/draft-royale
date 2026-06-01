@@ -13,6 +13,8 @@ export interface League {
   sport: string
   commissionerId: string
   createdAt: string
+  /** Commissioner-configured game settings (turn order, absent handling). */
+  settings?: import('./game').GameSettings
 }
 
 export interface LeagueMember {

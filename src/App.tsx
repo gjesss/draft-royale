@@ -10,6 +10,7 @@ import LeagueHome from './components/league/LeagueHome'
 import JoinLeague from './components/league/JoinLeague'
 import JoinScreen from './components/league/JoinScreen'
 import GameLobby from './components/game/GameLobby'
+import MockSetup from './components/game/MockSetup'
 import ProfileScreen from './components/ProfileScreen'
 import BottomNav, { NavTab } from './components/layout/BottomNav'
 import GameBoard from './components/GameBoard'
@@ -23,6 +24,7 @@ type View =
   | { screen: 'lobby'; gameId: string; leagueId: string; isCommissioner: boolean }
   | { screen: 'join'; token?: string }
   | { screen: 'profile' }
+  | { screen: 'mock' }
 
 function AppRouter() {
   const { user, profile, loading } = useAuth()
@@ -80,6 +82,10 @@ function AppRouter() {
     )
   }
 
+  if (view.screen === 'mock') {
+    return <MockSetup onBack={() => setView({ screen: 'dashboard' })} />
+  }
+
   // ── Tabbed shell with bottom nav ──
   const activeTab: NavTab = view.screen === 'profile' ? 'profile' : view.screen === 'join' ? 'join' : 'leagues'
 
@@ -89,6 +95,7 @@ function AppRouter() {
         <Dashboard
           onSelectLeague={id => setView({ screen: 'league', leagueId: id })}
           onJoinViaToken={() => setView({ screen: 'join' })}
+          onMockDraft={() => setView({ screen: 'mock' })}
         />
       )}
 
@@ -130,7 +137,8 @@ function GameLobbyWrapper({ gameId, leagueId, isCommissioner, onBack }: {
   if (!league) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading lobby…</div>
   return (
     <GameLobby gameId={gameId} leagueId={leagueId}
-      members={league.members} isCommissioner={isCommissioner} onBack={onBack} />
+      members={league.members} isCommissioner={isCommissioner}
+      settings={league.settings} onBack={onBack} />
   )
 }
 

@@ -2,6 +2,20 @@ export type GamePhase = 'landing' | 'rules' | 'setup' | 'playing' | 'complete';
 export type BallType = 'pick' | 'pick-swap' | 'shotgun';
 export type ChallengeGame = 'beer-pong' | 'quarters' | 'flip-cup' | 'holdem' | 'high-card';
 
+// ─── Commissioner-configured settings ──────────────────────────────────────────
+export type TurnOrderMode = 'manual' | 'random';
+export type AbsentBehavior = 'skip' | 'commissioner' | 'wait' | 'auto';
+
+export interface GameSettings {
+  turnOrderMode: TurnOrderMode;   // how the draw rotation is established
+  absentBehavior: AbsentBehavior; // what happens on an away player's turn
+}
+
+export const DEFAULT_SETTINGS: GameSettings = {
+  turnOrderMode: 'random',
+  absentBehavior: 'skip',
+};
+
 // ─── Ball pool ───────────────────────────────────────────────────────────────
 export interface Ball {
   id: string;
@@ -17,6 +31,10 @@ export interface Player {
   /** Non-null when this player holds a pick-swap but is waiting for a future
    *  pick position to be filled before they can challenge it. */
   pendingChallengePickPosition: number | null;
+  /** Mock-draft / simulated opponent — auto-plays its turns. */
+  isBot?: boolean;
+  /** Whether the player is currently active in the app (live play). Default true. */
+  present?: boolean;
 }
 
 // ─── Pick slots ───────────────────────────────────────────────────────────────
@@ -49,11 +67,9 @@ export interface Challenge {
 // ─── Modal types ──────────────────────────────────────────────────────────────
 export type ModalType =
   | { kind: 'draw-result'; ballType: BallType; pickedPlayerId?: string; pickedPosition?: number; rule3Redraw?: boolean; pendingChallengeName?: string }
-  | { kind: 'assign-swap'; }        // who drew the pick-swap ball?
-  | { kind: 'assign-shotgun'; }     // who drew the shotgun ball?
   | { kind: 'shotgun-overflow'; playerId: string }
   | { kind: 'challenge'; challenge: Challenge }
-  | { kind: 'pending-pick-swap'; challengerId: string }  // challenger choosing future target
+  | { kind: 'pending-pick-swap'; challengerId: string }  // drawer choosing target / hold
   | null;
 
 // ─── Full game state ──────────────────────────────────────────────────────────
@@ -70,21 +86,31 @@ export interface GameState {
   modal: ModalType;
   /** Last-drawn ball info (for display) */
   lastDraw: { ballType: BallType; playerName?: string; position?: number } | null;
+  // ── Turn-based play ──
+  settings: GameSettings;
+  /** Player ids in draw-rotation order. */
+  turnOrder: string[];
+  /** Index into turnOrder of whose turn it is to draw. */
+  currentTurnIndex: number;
+  /** True for a local solo mock draft (bots auto-play). */
+  isMock: boolean;
+  /** In a mock draft, which player is the human. */
+  humanPlayerId: string | null;
 }
 
 // ─── Reducer actions ──────────────────────────────────────────────────────────
 export type GameAction =
   | { type: 'NAVIGATE'; phase: GamePhase }
-  | { type: 'START_GAME'; playerNames: string[] }
+  | { type: 'START_GAME'; players: { name: string; isBot?: boolean }[]; settings: GameSettings; isMock?: boolean }
   | { type: 'DRAW_BALL' }
-  | { type: 'ASSIGN_PICK_SWAP'; playerId: string }
-  | { type: 'ASSIGN_SHOTGUN'; playerId: string }
   | { type: 'GIVE_SHOTGUN'; toPlayerId: string }
   | { type: 'SET_PENDING_CHALLENGE'; challengerId: string; targetPosition: number }
   | { type: 'INITIATE_CHALLENGE'; challengerId: string; targetPickPosition: number }
   | { type: 'SELECT_CHALLENGE_GAME'; game: ChallengeGame }
   | { type: 'RESOLVE_CHALLENGE'; challengerWon: boolean }
+  | { type: 'SKIP_TURN' }
+  | { type: 'SET_PRESENCE'; playerId: string; present: boolean }
   | { type: 'CLOSE_MODAL' }
   | { type: 'NEW_GAME' }
-  /** Replace entire state from Supabase real-time update (non-commissioner clients) */
+  /** Replace entire state from real-time update (non-acting clients) */
   | { type: 'REPLACE_STATE'; state: GameState };

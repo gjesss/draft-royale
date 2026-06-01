@@ -4,20 +4,24 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../store/AuthContext'
 import { useMyLeagues } from '../../hooks/useLeague'
 import { TrophyIcon } from '../Logo'
+import { TurnOrderMode, AbsentBehavior } from '../../types/game'
 
 interface Props {
   onSelectLeague: (leagueId: string) => void
   onJoinViaToken: () => void
+  onMockDraft?: () => void
 }
 
 const SPORTS = ['Fantasy Football', 'Fantasy Basketball', 'Fantasy Baseball', 'Fantasy Hockey', 'Other']
 
-export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
+export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft }: Props) {
   const { user, profile } = useAuth()
   const { leagues, loading, refresh } = useMyLeagues(user?.uid ?? null)
   const [showCreate, setShowCreate] = useState(false)
   const [newName, setNewName] = useState('')
   const [newSport, setNewSport] = useState('Fantasy Football')
+  const [turnMode, setTurnMode] = useState<TurnOrderMode>('random')
+  const [absent, setAbsent] = useState<AbsentBehavior>('skip')
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
@@ -29,6 +33,7 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
       const leagueRef = await addDoc(collection(db, 'leagues'), {
         name: newName.trim(), sport: newSport,
         commissionerId: user.uid, createdAt: new Date().toISOString(),
+        settings: { turnOrderMode: turnMode, absentBehavior: absent },
       })
       // Add commissioner as member (subcollection)
       await setDoc(doc(db, 'leagues', leagueRef.id, 'members', user.uid), {
@@ -110,6 +115,31 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
                          text-white focus:outline-none focus:border-cyan-500 text-sm">
               {SPORTS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
+
+            {/* Game settings */}
+            <div className="space-y-2 pt-1">
+              <div>
+                <label className="text-gray-400 text-xs uppercase tracking-wide">Draw order</label>
+                <select value={turnMode} onChange={e => setTurnMode(e.target.value as TurnOrderMode)}
+                  className="w-full mt-1 bg-black/50 border border-royal-border rounded-xl px-4 py-2.5
+                             text-white focus:outline-none focus:border-cyan-500 text-sm">
+                  <option value="random">Random (shuffled at game start)</option>
+                  <option value="manual">Manual (commissioner sets in lobby)</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-gray-400 text-xs uppercase tracking-wide">If a player is away on their turn</label>
+                <select value={absent} onChange={e => setAbsent(e.target.value as AbsentBehavior)}
+                  className="w-full mt-1 bg-black/50 border border-royal-border rounded-xl px-4 py-2.5
+                             text-white focus:outline-none focus:border-cyan-500 text-sm">
+                  <option value="skip">Skip them</option>
+                  <option value="commissioner">Commissioner draws for them</option>
+                  <option value="auto">Auto-draw after a countdown</option>
+                  <option value="wait">Wait for them</option>
+                </select>
+              </div>
+            </div>
+
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <div className="flex gap-2">
               <button className="btn-ghost flex-1 py-2.5 text-sm" onClick={() => setShowCreate(false)}>Cancel</button>
@@ -128,6 +158,24 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken }: Props) {
           </button>
         )}
       </div>
+
+      {/* Practice / onboarding */}
+      {onMockDraft && (
+        <div className="mt-8 pt-5 border-t border-royal-border">
+          <p className="text-gray-400 text-sm uppercase tracking-wide font-medium mb-2">Practice</p>
+          <button
+            onClick={onMockDraft}
+            className="card w-full flex items-center gap-3 hover:border-cyan-500/50 transition-colors active:scale-[0.99] text-left"
+          >
+            <span className="text-2xl">🎮</span>
+            <div className="flex-1">
+              <p className="font-bold text-white">Mock Draft</p>
+              <p className="text-gray-500 text-sm">Solo practice vs. auto-players — learn the flow in 2 minutes</p>
+            </div>
+            <span className="text-gray-600">›</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

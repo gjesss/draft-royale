@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../store/GameContext';
 import { getLockedPlayerIds } from '../utils/gameLogic';
-import AssignModal from './modals/AssignModal';
+import { useMockDriver } from '../hooks/useMockDriver';
 import ShotgunOverflowModal from './modals/ShotgunOverflowModal';
 import DrawResultModal from './modals/DrawResultModal';
 import ChallengeModal from './modals/ChallengeModal';
@@ -11,11 +11,20 @@ export default function GameBoard() {
   const { state, dispatch } = useGame();
   const [tab, setTab] = useState<'picks' | 'players'>('picks');
 
+  // Drive bot opponents in local mock drafts.
+  useMockDriver(state, dispatch);
+
   const { ballPool, totalBalls, drawnCount, pickSlots, players, modal, activeChallenge } = state;
   const ballsLeft = ballPool.length;
   const pct = totalBalls > 0 ? ((drawnCount / totalBalls) * 100) : 0;
   const lockedIds = getLockedPlayerIds(pickSlots);
-  const canDraw = modal === null && ballPool.length > 0;
+
+  // Whose turn is it to draw?
+  const drawerId = state.turnOrder[state.currentTurnIndex];
+  const drawer = players.find(p => p.id === drawerId);
+  // In mock, only the human may press Draw on their turn. (Live gating added later.)
+  const myTurn = !state.isMock || drawerId === state.humanPlayerId;
+  const canDraw = modal === null && !activeChallenge && ballsLeft > 0 && myTurn;
 
   return (
     <div className="min-h-screen flex flex-col max-w-lg mx-auto">
@@ -78,9 +87,22 @@ export default function GameBoard() {
             onClick={() => canDraw && dispatch({ type: 'DRAW_BALL' })}
             disabled={!canDraw}
           >
-            {ballsLeft === 0 ? '🎉 Done!' : '🎱 Draw Ball'}
+            {ballsLeft === 0
+              ? '🎉 Done!'
+              : myTurn ? '🎱 Draw Ball' : `⏳ ${drawer?.name ?? 'Player'}'s turn`}
           </button>
         </div>
+
+        {/* Turn indicator */}
+        {ballsLeft > 0 && !activeChallenge && (
+          <div className="mt-3 text-center">
+            {myTurn
+              ? <p className="text-cyan-400 text-sm font-medium">
+                  {state.isMock ? 'Your turn to draw' : `Draw, ${drawer?.name ?? ''}`}
+                </p>
+              : <p className="text-gray-500 text-sm">Waiting on <span className="text-white font-medium">{drawer?.name}</span>…</p>}
+          </div>
+        )}
 
         {activeChallenge && (
           <div className="mt-3 bg-purple-900/30 border border-purple-600 rounded-xl px-4 py-2.5 text-center">
@@ -187,8 +209,6 @@ export default function GameBoard() {
 
       {/* Modals */}
       {modal?.kind === 'draw-result'    && <DrawResultModal />}
-      {modal?.kind === 'assign-swap'    && <AssignModal type="pick-swap" />}
-      {modal?.kind === 'assign-shotgun' && <AssignModal type="shotgun" />}
       {modal?.kind === 'shotgun-overflow' && <ShotgunOverflowModal playerId={modal.playerId} />}
       {modal?.kind === 'pending-pick-swap' && <PendingPickSwapModal challengerId={modal.challengerId} />}
       {modal?.kind === 'challenge'      && <ChallengeModal challenge={modal.challenge} />}

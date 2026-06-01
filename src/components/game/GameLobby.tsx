@@ -3,16 +3,18 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useGame } from '../../store/GameContext'
 import { LeagueMember } from '../../types/db'
+import { GameSettings, DEFAULT_SETTINGS } from '../../types/game'
 
 interface Props {
   gameId: string
   leagueId: string
   members: LeagueMember[]
   isCommissioner: boolean
+  settings?: GameSettings
   onBack: () => void
 }
 
-export default function GameLobby({ gameId, leagueId, members, isCommissioner, onBack }: Props) {
+export default function GameLobby({ gameId, leagueId, members, isCommissioner, settings, onBack }: Props) {
   const { dispatch, syncGame } = useGame()
   const [selected, setSelected] = useState<Set<string>>(new Set(members.map(m => m.userId)))
   const [names, setNames] = useState<Record<string, string>>(
@@ -27,13 +29,13 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, o
   const handleStart = async () => {
     if (selected.size < 2) return
     setStarting(true)
-    const playerNames = members
+    const gamePlayers = members
       .filter(m => selected.has(m.userId))
-      .map(m => names[m.userId]?.trim() || m.username)
+      .map(m => ({ name: names[m.userId]?.trim() || m.username }))
 
     await updateDoc(doc(db, 'leagues', leagueId, 'games', gameId), { status: 'playing' })
     syncGame(leagueId, gameId, isCommissioner)
-    dispatch({ type: 'START_GAME', playerNames })
+    dispatch({ type: 'START_GAME', players: gamePlayers, settings: settings ?? DEFAULT_SETTINGS })
   }
 
   if (!isCommissioner) {
