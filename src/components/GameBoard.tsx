@@ -3,6 +3,7 @@ import { useGame } from '../store/GameContext';
 import { getLockedPlayerIds } from '../utils/gameLogic';
 import { useMockDriver } from '../hooks/useMockDriver';
 import { useTurnControl } from '../hooks/useTurnControl';
+import DraftBoard, { BoardCell } from './league/DraftBoard';
 import ShotgunOverflowModal from './modals/ShotgunOverflowModal';
 import DrawResultModal from './modals/DrawResultModal';
 import ChallengeModal from './modals/ChallengeModal';
@@ -148,50 +149,21 @@ export default function GameBoard() {
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto px-4 py-3 pb-safe">
 
-        {tab === 'picks' && (
-          <div className="space-y-2">
-            {pickSlots.map(slot => {
-              const holder = players.find(p => p.id === slot.playerId);
-              const hasPending = players.some(p => p.pendingChallengePickPosition === slot.position);
-              return (
-                <div
-                  key={slot.position}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all
-                    ${slot.locked
-                      ? 'border-yellow-600/50 bg-yellow-900/10'
-                      : slot.playerId
-                      ? 'border-royal-border bg-royal-card'
-                      : 'border-royal-border/40 bg-black/20 opacity-50'
-                    }`}
-                >
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0
-                    ${slot.locked ? 'bg-yellow-500 text-black' : 'bg-royal-muted text-gray-300'}`}>
-                    {slot.locked ? '👑' : slot.position}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    {holder
-                      ? <p className={`font-semibold truncate text-base ${slot.locked ? 'text-yellow-400' : 'text-white'}`}>{holder.name}</p>
-                      : <p className="text-gray-600 text-sm italic">Not yet drawn</p>
-                    }
-                    {hasPending && <p className="text-yellow-500 text-xs mt-0.5">⏳ Challenge incoming...</p>}
-                  </div>
-                  {slot.playerId && (
-                    slot.locked
-                      ? <span className="text-yellow-400 text-xs font-bold px-2 py-1 bg-yellow-900/30 rounded-lg shrink-0">🔒 LOCKED</span>
-                      : <div className="flex gap-1 shrink-0">
-                          {[1, 2].map(n => (
-                            <div key={n} className={`w-4 h-4 rounded-full border-2 flex items-center justify-center
-                              ${slot.defenseCount >= n ? 'border-cyan-400 bg-cyan-400' : 'border-gray-600'}`}>
-                              {slot.defenseCount >= n && <span className="text-black text-xs">✓</span>}
-                            </div>
-                          ))}
-                        </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {tab === 'picks' && (() => {
+          const firstOpen = pickSlots.find(s => s.playerId === null)?.position;
+          const cells: BoardCell[] = pickSlots.map(s => {
+            const holder = players.find(p => p.id === s.playerId);
+            return {
+              position: s.position,
+              name: holder?.name ?? null,
+              seed: holder?.uid ?? holder?.id ?? holder?.name,
+              locked: s.locked,
+              defenseCount: s.defenseCount,
+              onClock: s.position === firstOpen,
+            };
+          });
+          return <DraftBoard cells={cells} />;
+        })()}
 
         {tab === 'players' && (
           <div className="space-y-2">

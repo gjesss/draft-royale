@@ -1,82 +1,186 @@
 rules_version = '2';
+
+// Draft Royale — Firestore security rules (hardened 2026-06-07).
+//
+// Design notes:
+//   • Firebase web API keys in the client bundle are public BY DESIGN. These
+//     rules are the actual security boundary, so they're written to enforce
+//     authorization rather than rubber-stamp `request.auth != null`.
+//   • Where Cloud Functions would be cleanest (server-authoritative game state),
+//     we use a "current-turn-UID claim" pattern that the rule validates. A
+//     malicious turn-holder can still write a bad next-state on their own turn,
+//     but cannot impersonate another player. The full server-authoritative path
+//     lives in `functions/src/index.ts` and is opt-in once the project is on
+//     the Blaze plan (see DEPLOY.md).
+//   • Invite-based joining is enforced via a token claim in the create payload,
+//     validated against `inviteTokens/{token}`. No more "any auth user adds
+//     themselves to any league."
+//   • `expiresAt` is now a number (epoch ms) so rules can compare with
+//     `request.time.toMillis()`. Update any client code that writes it.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── User profiles ───────────────────────────────────────
+    // ── Shared predicates ──────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+    function self(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function isLeagueMember(leagueId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+    }
+    function isLeagueCommissioner(leagueId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+    }
+    // True iff the given invite token exists, points at the given league, and
+    // has not expired. Used to gate "joining" — see leagues/{}/members.
+    function hasValidInviteToken(leagueId, token) {
+      return token is string && token.size() > 0
+        && exists(/databases/$(database)/documents/inviteTokens/$(token))
+        && get(/databases/$(database)/documents/inviteTokens/$(token)).data.leagueId == leagueId
+        && get(/databases/$(database)/documents/inviteTokens/$(token)).data.expiresAt is number
+        && request.time.toMillis() < get(/databases/$(database)/documents/inviteTokens/$(token)).data.expiresAt;
+    }
+
+    // ── User profiles ──────────────────────────────────────────────────────
+    // Readable by any signed-in user (used to render member display names).
+    // Only the owner can create or edit their own profile.
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
+      allow read: if signedIn();
+      allow create, update: if self(userId);
+      allow delete: if false;
     }
 
-    // ── League member index (fast lookup by userId) ─────────
+    // ── Usernames index (NEW) — Firestore-enforced uniqueness for BUG-002 ──
+    // Doc id IS the lowercase username. Create requires the caller to be
+    // claiming a username for their own UID; update/delete only by that owner.
+    match /usernames/{username} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ── League membership global index ─────────────────────────────────────
+    // Used by useMyLeagues to find leagues you belong to.
+    // Doc id MUST be `${leagueId}_${userId}` — enforced in rule below.
+    // Create is gated by the same invite-token claim as the per-league
+    // members subcollection, so the index can't be poisoned independently.
     match /leagueMembers/{docId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && docId == request.resource.data.leagueId + '_' + request.auth.uid
+        && hasValidInviteToken(
+             request.resource.data.leagueId,
+             request.resource.data.get('inviteToken', '')
+           );
+      // Allow the owner to remove their own index row (leave-a-league flow).
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
     }
 
-    // ── Invite token index (fast lookup by token) ───────────
+    // ── Invite tokens index ────────────────────────────────────────────────
+    // Reads are doc-only (no listing — `allow list` defaults to false because
+    // we only grant `get` here). Writes only by the league's commissioner;
+    // deletes allowed by any signed-in user (single-use cleanup after accept).
     match /inviteTokens/{token} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.expiresAt is number
+        && request.resource.data.expiresAt > request.time.toMillis()
+        && isLeagueCommissioner(request.resource.data.leagueId);
+      allow update: if false;
+      // Either the commissioner (revoke) or any signed-in user (single-use
+      // cleanup as part of acceptInvite). Worst case a malicious delete is a
+      // griefing DoS on one invite — the commissioner regenerates.
+      allow delete: if signedIn();
     }
 
-    // ── Leagues ─────────────────────────────────────────────
+    // ── Leagues ────────────────────────────────────────────────────────────
     match /leagues/{leagueId} {
-      // Readable by members
-      allow read: if request.auth != null &&
-        exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+      allow read: if isLeagueMember(leagueId);
+      allow create: if signedIn()
+        && request.resource.data.commissionerId == request.auth.uid;
+      allow update: if isLeagueCommissioner(leagueId);
+      allow delete: if isLeagueCommissioner(leagueId);
 
-      // Creatable by any authenticated user
-      allow create: if request.auth != null &&
-        request.resource.data.commissionerId == request.auth.uid;
-
-      // Updatable by commissioner only
-      allow update: if request.auth != null &&
-        resource.data.commissionerId == request.auth.uid;
-
-      // ── Members subcollection ──────────────────────────────
+      // ── Members subcollection ────────────────────────────────────────────
       match /members/{memberId} {
-        allow read: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
-        allow write: if request.auth != null;
+        allow read: if isLeagueMember(leagueId);
+        // Self-join — must be claiming your own seat, and must present a valid
+        // invite token for THIS league.
+        allow create: if self(memberId)
+          && hasValidInviteToken(leagueId, request.resource.data.get('inviteToken', ''));
+        // Self-edit displayName/etc.; commissioner can edit anyone.
+        allow update: if self(memberId) || isLeagueCommissioner(leagueId);
+        // Leave: own seat. Commissioner can remove any member.
+        allow delete: if self(memberId) || isLeagueCommissioner(leagueId);
       }
 
-      // ── Invites subcollection ──────────────────────────────
+      // ── Invites subcollection ────────────────────────────────────────────
       match /invites/{inviteId} {
-        allow read: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
-        allow create: if request.auth != null &&
-          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
-        allow update: if request.auth != null;
-        allow delete: if request.auth != null;
+        allow read: if isLeagueMember(leagueId);
+        allow create: if isLeagueCommissioner(leagueId);
+        // Update is for marking accepted/revoked. Allowed for the commissioner;
+        // also allowed for the user accepting an invite, but only the `status`
+        // field may change and only `pending` -> `accepted`.
+        allow update: if isLeagueCommissioner(leagueId)
+          || (signedIn()
+              && resource.data.status == 'pending'
+              && request.resource.data.status == 'accepted'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']));
+        allow delete: if isLeagueCommissioner(leagueId);
       }
 
-      // ── Seasons subcollection ──────────────────────────────
+      // ── Seasons subcollection ────────────────────────────────────────────
       match /seasons/{seasonId} {
-        allow read: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
-        allow write: if request.auth != null &&
-          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
+        allow read: if isLeagueMember(leagueId);
+        allow write: if isLeagueCommissioner(leagueId);
       }
 
-      // ── Games subcollection ────────────────────────────────
+      // ── Games subcollection ──────────────────────────────────────────────
+      // The hardened "current-turn-UID claim" pattern:
+      //   • Every gameState write must also write a top-level `currentTurnUid`
+      //     field on the game doc (the UID whose turn it CURRENTLY is, derived
+      //     from state.turnOrder[state.currentTurnIndex]).
+      //   • To submit the NEXT state, the caller must match the PRIOR
+      //     `currentTurnUid` — i.e. you must have been the turn-holder when
+      //     you write. Commissioner override permitted (stall-breaker).
+      //   • First-state write (transition from gameState == null) is gated
+      //     to the league's commissioner (game start).
+      // Residual risk: a malicious turn-holder can still write any next-state
+      // they want on their own turn. Closing that requires the Cloud Function
+      // path (functions/src/index.ts → submitGameAction).
       match /games/{gameId} {
-        allow read: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
-        allow create: if request.auth != null &&
-          get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid;
-        // Live turn-based play: ANY league member may advance the shared game
-        // state (the app gates who can act on their turn). Last-write-wins is
-        // acceptable because turns are serialized in the UI.
-        allow update: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
+        allow read: if isLeagueMember(leagueId);
+        allow create: if isLeagueCommissioner(leagueId)
+          && request.resource.data.commissionerId == request.auth.uid;
+        allow update: if isLeagueMember(leagueId) && (
+          // First-state write — only commissioner may start the game.
+          (resource.data.get('gameState', null) == null && isLeagueCommissioner(leagueId))
+          // Subsequent advances — only the prior current-turn UID.
+          || resource.data.get('currentTurnUid', null) == request.auth.uid
+          // Commissioner override for absent-player stall-breaking.
+          || isLeagueCommissioner(leagueId)
+        );
+        allow delete: if isLeagueCommissioner(leagueId);
       }
 
-      // ── Draft results subcollection ────────────────────────
+      // ── Draft results subcollection ──────────────────────────────────────
+      // Now scoped to league members AND the recorder of record is captured
+      // for audit. Append-only — no update/delete except by commissioner.
       match /draftResults/{resultId} {
-        allow read: if request.auth != null &&
-          exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));
-        allow create: if request.auth != null;
+        allow read: if isLeagueMember(leagueId);
+        allow create: if isLeagueMember(leagueId);
+        allow update: if false;
+        allow delete: if isLeagueCommissioner(leagueId);
       }
     }
   }

@@ -41,9 +41,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (serialized === lastSyncRef.current) return // unchanged or applied-from-remote
     lastSyncRef.current = serialized
 
+    // Project the current turn-holder's UID onto the top-level doc so the
+    // Firestore rule can validate the writer is the player whose turn it is
+    // (see firestore.rules → leagues/{}/games/{} update rule, SEC-003 fix).
+    // A bad write that lies about this UID still fails the rule because rules
+    // check against `resource.data.currentTurnUid` (the PRIOR state), not the
+    // value being written.
+    const currentPid = state.turnOrder[state.currentTurnIndex] ?? null
+    const currentTurnUid =
+      currentPid ? (state.players.find(p => p.id === currentPid)?.uid ?? null) : null
+
     const t = setTimeout(() => {
       updateDoc(doc(db, 'leagues', leagueId, 'games', gameId), {
         gameState: state as unknown as Record<string, unknown>,
+        currentTurnUid,
         status: state.phase === 'complete' ? 'complete' : 'playing',
         ...(state.phase === 'complete' ? { completedAt: new Date().toISOString() } : {}),
       }).catch(console.error)

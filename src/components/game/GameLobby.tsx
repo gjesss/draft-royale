@@ -4,6 +4,7 @@ import { db } from '../../lib/firebase'
 import { useGame } from '../../store/GameContext'
 import { LeagueMember } from '../../types/db'
 import { GameSettings, DEFAULT_SETTINGS, resolveBallCounts } from '../../types/game'
+import Avatar from '../ui/Avatar'
 
 interface Props {
   gameId: string
@@ -67,7 +68,8 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
                 ${selected.has(m.userId) ? 'border-cyan-400 bg-cyan-400' : 'border-gray-600'}`}>
                 {selected.has(m.userId) && <span className="text-black text-xs font-bold">✓</span>}
               </div>
-              <p className="text-white font-medium text-sm flex-1">@{m.username}</p>
+              <Avatar name={m.displayName || m.username} seed={m.userId} size="sm" />
+              <p className="text-white font-medium text-sm flex-1 truncate">{m.displayName || `@${m.username}`}</p>
               {selected.has(m.userId) && (
                 <input type="text" value={names[m.userId] ?? ''} maxLength={20}
                   onChange={e => setNames(p => ({ ...p, [m.userId]: e.target.value }))}

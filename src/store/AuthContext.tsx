@@ -10,7 +10,7 @@ import {
   signOut as fbSignOut, sendEmailVerification, signInWithPopup,
 } from 'firebase/auth'
 import {
-  doc, getDoc, setDoc, query, collection, where, getDocs,
+  doc, getDoc, setDoc, runTransaction,
 } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../lib/firebase'
 import { UserProfile } from '../types/db'
@@ -30,6 +30,43 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
+
+/**
+ * Atomically reserve a username and create the user profile in one Firestore
+ * transaction. If `baseUsername` is taken, walk `${baseUsername}${n}` until we
+ * find a free slot — bounded so we surface a clear error instead of spinning.
+ *
+ * Closes the TOCTOU race described in BUG-002: two concurrent signups can no
+ * longer both claim the same username (Firestore guarantees document-id
+ * uniqueness on the `usernames/{username}` collection).
+ */
+async function claimUsernameAndCreateProfile(
+  uid: string, baseUsername: string, displayName: string,
+): Promise<UserProfile> {
+  const MAX_ATTEMPTS = 50
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const candidate = attempt === 0 ? baseUsername : `${baseUsername}${attempt}`
+    try {
+      const profile: UserProfile = {
+        uid, username: candidate, displayName,
+        createdAt: new Date().toISOString(),
+      }
+      await runTransaction(db, async (tx) => {
+        const unameRef = doc(db, 'usernames', candidate)
+        const userRef  = doc(db, 'users',     uid)
+        const existing = await tx.get(unameRef)
+        if (existing.exists()) throw new Error('TAKEN')
+        tx.set(unameRef, { uid, claimedAt: new Date().toISOString() })
+        tx.set(userRef, profile)
+      })
+      return profile
+    } catch (e) {
+      if ((e as Error).message !== 'TAKEN') throw e
+      // try next suffix
+    }
+  }
+  throw new Error(`Could not find an available username starting with "${baseUsername}"`)
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(DEV_PREVIEW ? mockUser : null)
@@ -77,19 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!existing) {
         const displayName = cred.user.displayName ?? 'Player'
         const base = displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'player'
-        let username = base
-        let attempt = 0
-        while (true) {
-          const q = query(collection(db, 'users'), where('username', '==', username))
-          const snap = await getDocs(q)
-          if (snap.empty) break
-          username = `${base}${++attempt}`
-        }
-        const p: UserProfile = {
-          uid: cred.user.uid, username, displayName,
-          createdAt: new Date().toISOString(),
-        }
-        await setDoc(doc(db, 'users', cred.user.uid), p)
+        // Atomically pick the first available `${base}${n}` and claim it via
+        // the `usernames/{username}` uniqueness index. Bounded attempts so we
+        // give up loudly instead of looping forever on a hot prefix.
+        const p = await claimUsernameAndCreateProfile(
+          cred.user.uid, base, displayName,
+        )
         setProfile(p) // ← directly update context state
       }
       return { error: null }
@@ -101,13 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /** The critical fix: setProfile(p) here updates all consumers including App */
   const createProfile = async (uid: string, username: string, displayName: string) => {
     try {
-      const p: UserProfile = {
-        uid,
-        username: username.toLowerCase(),
-        displayName: displayName || username,
-        createdAt: new Date().toISOString(),
-      }
-      await setDoc(doc(db, 'users', uid), p)
+      // Transactional claim against `usernames/{username}` — closes the TOCTOU
+      // race where two concurrent signups could both pass isUsernameAvailable
+      // and both write the same username (BUG-002 in app-review-2026-06-07.md).
+      const p = await claimUsernameAndCreateProfile(
+        uid, username.toLowerCase(), displayName || username,
+      )
       setProfile(p) // ← this is what was missing — updates App instantly
       return { error: null }
     } catch (e) { return { error: e as Error } }
@@ -121,8 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isUsernameAvailable = async (username: string) => {
-    const q = query(collection(db, 'users'), where('username', '==', username.toLowerCase()))
-    return (await getDocs(q)).empty
+    // Authoritative source is the `usernames/{username}` uniqueness index — a
+    // single getDoc, not a where-query. The actual reservation still happens
+    // transactionally in claimUsernameAndCreateProfile; this is a UX hint only.
+    const snap = await getDoc(doc(db, 'usernames', username.toLowerCase()))
+    return !snap.exists()
   }
 
   return (

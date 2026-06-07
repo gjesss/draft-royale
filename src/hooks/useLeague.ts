@@ -3,7 +3,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc,
   addDoc, updateDoc, deleteDoc, query,
   where, orderBy, limit, serverTimestamp,
-  Timestamp,
+  writeBatch, documentId, Timestamp,
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import {
@@ -15,6 +15,12 @@ import { DEV_PREVIEW, mockLeagues, mockFullLeague, mockGamesFor, mockHistory } f
 function nowIso() { return new Date().toISOString() }
 function expiresIso(days = 7) {
   const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString()
+}
+/** Epoch-ms expiry — used on inviteTokens so Firestore rules can compare
+ *  against `request.time.toMillis()` (string ISO comparisons aren't reliable
+ *  in rules without a parse step). */
+function expiresMillis(days = 7) {
+  return Date.now() + days * 24 * 60 * 60 * 1000
 }
 // 6-char uppercase join code — short enough to type, clean in a text message.
 // Excludes ambiguous chars (0/O, 1/I/L) so codes read clearly over SMS.
@@ -39,13 +45,17 @@ export function useMyLeagues(userId: string | null) {
     const leagueIds = memberSnaps.docs.map(d => d.data().leagueId as string)
     if (leagueIds.length === 0) { setLeagues([]); setLoading(false); return }
 
-    const ls = await Promise.all(
-      leagueIds.map(async id => {
-        const snap = await getDoc(doc(db, 'leagues', id))
-        return snap.exists() ? { id: snap.id, ...snap.data() } as League : null
-      })
-    )
-    setLeagues(ls.filter(Boolean) as League[])
+    // Batched `in` query (≤30 ids per request) — was N+1 getDoc calls. See
+    // PERF-001 in app-review-2026-06-07.md.
+    const out: League[] = []
+    for (let i = 0; i < leagueIds.length; i += 30) {
+      const chunk = leagueIds.slice(i, i + 30)
+      const snap = await getDocs(
+        query(collection(db, 'leagues'), where(documentId(), 'in', chunk))
+      )
+      for (const d of snap.docs) out.push({ id: d.id, ...d.data() } as League)
+    }
+    setLeagues(out)
     setLoading(false)
   }, [userId])
 
@@ -117,6 +127,7 @@ export function useLeague(leagueId: string | null) {
   const createInvite = async (invitedBy: string, leagueName: string, email = '') => {
     if (!leagueId) return { data: null, error: 'No league' }
     const token = randomToken()
+    const expiresAtMs = expiresMillis(7)
     const invite: Omit<LeagueInvite, 'id'> = {
       token, leagueId, leagueName,
       email, invitedBy,
@@ -125,9 +136,10 @@ export function useLeague(leagueId: string | null) {
       expiresAt: expiresIso(7),
     }
     const ref = await addDoc(collection(db, 'leagues', leagueId, 'invites'), invite)
-    // Also write a token-index document for fast lookup without knowing leagueId
+    // Token-index doc — `expiresAt` is numeric epoch-ms so Firestore rules can
+    // compare directly against `request.time.toMillis()`.
     await setDoc(doc(db, 'inviteTokens', token), {
-      leagueId, inviteId: ref.id, expiresAt: invite.expiresAt,
+      leagueId, inviteId: ref.id, expiresAt: expiresAtMs,
     })
     return { data: { id: ref.id, ...invite }, error: null }
   }
@@ -171,11 +183,18 @@ export function useLeague(leagueId: string | null) {
 }
 
 // ── Join via token ────────────────────────────────────────────────────────────
+// NOTE: This is a UX-only preview ("you've been invited to <league>"). The
+// authoritative check happens in Firestore rules at accept time
+// (hasValidInviteToken). Don't add security checks here that the server doesn't
+// also enforce — they're easy to bypass by calling acceptInvite directly.
 export async function lookupInviteToken(token: string) {
   const snap = await getDoc(doc(db, 'inviteTokens', token))
   if (!snap.exists()) return null
   const { leagueId, inviteId, expiresAt } = snap.data()
-  if (new Date(expiresAt) < new Date()) return null
+  // expiresAt is now numeric epoch-ms; tolerate legacy ISO-string rows from
+  // before the migration so old invites don't 500 the UI.
+  const expiresMs = typeof expiresAt === 'number' ? expiresAt : Date.parse(expiresAt)
+  if (Number.isFinite(expiresMs) && expiresMs < Date.now()) return null
 
   const inviteSnap = await getDoc(doc(db, 'leagues', leagueId, 'invites', inviteId))
   if (!inviteSnap.exists()) return null
@@ -187,21 +206,44 @@ export async function lookupInviteToken(token: string) {
   return { inviteId, leagueId, leagueName, status: invite.status, token }
 }
 
+/**
+ * Atomically join a league using an invite token. All four writes commit
+ * together via writeBatch — no more half-joined-user state (BUG-001 in
+ * app-review-2026-06-07.md).
+ *
+ * The `inviteToken` field is included on the member docs because Firestore
+ * rules validate it (see `hasValidInviteToken` in firestore.rules).
+ */
 export async function acceptInvite(
   token: string, inviteId: string, leagueId: string,
   userId: string, displayName: string, username: string
 ) {
-  // Add member
-  await setDoc(doc(db, 'leagues', leagueId, 'members', userId), {
-    userId, role: 'member', displayName, username, joinedAt: nowIso(),
+  const batch = writeBatch(db)
+
+  // 1. Member doc — `inviteToken` field is required by the rule to authorize
+  //    this self-add. Without it the write is rejected.
+  batch.set(doc(db, 'leagues', leagueId, 'members', userId), {
+    userId, role: 'member', displayName, username,
+    joinedAt: nowIso(),
+    inviteToken: token,
   })
-  // Add leagueMembers index
-  await setDoc(doc(db, 'leagueMembers', `${leagueId}_${userId}`), {
+
+  // 2. leagueMembers index — same token claim.
+  batch.set(doc(db, 'leagueMembers', `${leagueId}_${userId}`), {
     userId, leagueId, role: 'member',
+    inviteToken: token,
   })
-  // Mark invite accepted
-  await updateDoc(doc(db, 'leagues', leagueId, 'invites', inviteId), { status: 'accepted' })
-  await deleteDoc(doc(db, 'inviteTokens', token))
+
+  // 3. Mark invite accepted (rule allows pending → accepted by signed-in users
+  //    when ONLY the status field changes).
+  batch.update(doc(db, 'leagues', leagueId, 'invites', inviteId), {
+    status: 'accepted',
+  })
+
+  // 4. Delete the single-use token.
+  batch.delete(doc(db, 'inviteTokens', token))
+
+  await batch.commit()
 }
 
 // ── Draft history ─────────────────────────────────────────────────────────────

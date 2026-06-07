@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../store/AuthContext'
 import { useMyLeagues } from '../hooks/useLeague'
 import { TrophyIcon } from './Logo'
+import Avatar from './ui/Avatar'
 
 interface Props {
   onOpenRules: () => void
@@ -24,15 +25,12 @@ export default function ProfileScreen({ onOpenRules }: Props) {
     setEditing(false)
   }
 
-  const initials = (profile?.displayName ?? '?')
-    .split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-
   return (
     <div className="min-h-screen max-w-lg mx-auto px-4 pt-8 pb-28">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center mb-3 shadow-neon">
-          <span className="text-3xl font-bold text-black">{initials}</span>
+        <div className="mb-3">
+          <Avatar name={profile?.displayName ?? 'You'} seed={profile?.uid} size="xl" />
         </div>
         {editing ? (
           <div className="w-full max-w-xs space-y-2">

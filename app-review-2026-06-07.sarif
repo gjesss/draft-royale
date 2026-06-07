@@ -1,0 +1,613 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "app-review-kit",
+          "informationUri": "https://app-review-kit",
+          "version": "1.0",
+          "rules": [
+            {
+              "id": "security/CWE-284",
+              "name": "OWASPA01:2021—BrokenAccessControl",
+              "shortDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control"
+              },
+              "fullDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-284"
+                ],
+                "security-severity": "9.5"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/284.html"
+            },
+            {
+              "id": "security/CWE-285",
+              "name": "OWASPA01:2021—BrokenAccessControl(AuthorizationBypass)",
+              "shortDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control (Authorization Bypass)"
+              },
+              "fullDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control (Authorization Bypass)"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-285"
+                ],
+                "security-severity": "9.5"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/285.html"
+            },
+            {
+              "id": "security/CWE-602",
+              "name": "OWASPA04:2021—InsecureDesign(Client-SideTrust)",
+              "shortDescription": {
+                "text": "OWASP A04:2021 — Insecure Design (Client-Side Trust)"
+              },
+              "fullDescription": {
+                "text": "OWASP A04:2021 — Insecure Design (Client-Side Trust)"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-602"
+                ],
+                "security-severity": "8.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/602.html"
+            },
+            {
+              "id": "security/CWE-639",
+              "name": "OWASPA01:2021—BrokenAccessControl",
+              "shortDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control"
+              },
+              "fullDescription": {
+                "text": "OWASP A01:2021 — Broken Access Control"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-639"
+                ],
+                "security-severity": "8.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/639.html"
+            },
+            {
+              "id": "security/CWE-613",
+              "name": "InsufficientSession/TokenExpiration",
+              "shortDescription": {
+                "text": "Insufficient Session/Token Expiration"
+              },
+              "fullDescription": {
+                "text": "Insufficient Session/Token Expiration"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-613"
+                ],
+                "security-severity": "5.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/613.html"
+            },
+            {
+              "id": "security/CWE-1395",
+              "name": "OWASPA06:2021—VulnerableandOutdatedComponents",
+              "shortDescription": {
+                "text": "OWASP A06:2021 — Vulnerable and Outdated Components"
+              },
+              "fullDescription": {
+                "text": "OWASP A06:2021 — Vulnerable and Outdated Components"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "CWE-1395"
+                ],
+                "security-severity": "3.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/1395.html"
+            },
+            {
+              "id": "performance/PERF-001",
+              "name": "I/O—N+1reads",
+              "shortDescription": {
+                "text": "I/O — N+1 reads"
+              },
+              "fullDescription": {
+                "text": "I/O — N+1 reads"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "tags": [
+                  "performance"
+                ],
+                "security-severity": "5.0"
+              }
+            },
+            {
+              "id": "correctness/CWE-662",
+              "name": "Atomicity/dataconsistency",
+              "shortDescription": {
+                "text": "Atomicity / data consistency"
+              },
+              "fullDescription": {
+                "text": "Atomicity / data consistency"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "correctness",
+                  "CWE-662"
+                ],
+                "security-severity": "8.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/662.html"
+            },
+            {
+              "id": "correctness/CWE-367",
+              "name": "Racecondition",
+              "shortDescription": {
+                "text": "Race condition"
+              },
+              "fullDescription": {
+                "text": "Race condition"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "tags": [
+                  "correctness",
+                  "CWE-367"
+                ],
+                "security-severity": "5.0"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/367.html"
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "security/CWE-284",
+          "level": "error",
+          "message": {
+            "text": "[SEC-001] Firestore is reportedly still in TEST MODE — every document world-readable AND world-writable\n\nPer the project's own memory notes, Firestore is in TEST MODE so that live multiplayer works today, with this `firestore.rules` file existing in the repo but NOT YET DEPLOYED. Firestore test-mode rules are `allow read, write: if request.time < <expiry-date>;` — effectively allow-all without even requiring auth, until they auto-expire to deny-all. While unconfirmed against the live project, this is the only configuration consistent with the project notes; treat as the working assumption until verified.\n\nImpact: If true: any unauthenticated visitor on the public Vercel URL (or anyone hitting the Firestore REST API directly with the public project ID) can read every user profile, every league, every game, every invite token, every draft history — and overwrite or delete all of it. The app is fully open to data theft, vandalism, and pranking (rewrite a draft result, claim wins, ban members, etc.). Test mode also auto-expires to deny-all, so the live app will silently start 403'ing every read when the clock hits the deadline.\n\nFix: Verify the live rules in the Firebase console NOW. If test mode is active: deploy `firestore.rules` immediately. CLI setup if not done: `npm i -g firebase-tools && firebase login && firebase init firestore` (point at the existing project), then `firebase deploy --only firestore:rules`. After deploying, the issues in SEC-002 through SEC-006 still apply — those are problems in the rules file itself that need to be tightened before this is actually safe."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 1,
+                  "endLine": 83
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-firestore-rules-not-deployed"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "critical",
+            "confidence": "medium",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-285",
+          "level": "error",
+          "message": {
+            "text": "[SEC-002] Members subcollection world-writable — any signed-in user can add themselves to ANY league\n\nThe `leagues/{leagueId}/members/{memberId}` subcollection has `allow write: if request.auth != null;` — meaning ANY signed-in user can `setDoc(doc(db, 'leagues', '<some-league-id>', 'members', myUid), {role: 'member', ...})` and instantly become a member of someone else's league. The global `leagueMembers/{docId}` index is the same. League read-access (and game-state write access — see SEC-003) is gated by the existence of a row in this subcollection, so this single permission opens every gated path. League IDs are short Firestore IDs and can be guessed/enumerated from any leaked URL, screenshot, or invite link.\n\nImpact: An attacker (or any of your friends-and-family users acting curious) can join arbitrary leagues without an invite. Once joined they can read every game's state, every draft history, every member's display name, and per SEC-003 they can also overwrite the live game state. This breaks the entire trust model: the app assumes \"member of league X\" = \"explicitly invited by the commissioner of league X.\"\n\nFix: Two-step fix. (1) Tighten the rule: only allow self-add as a member when there is a matching ACCEPTED invite for `(leagueId, request.auth.uid)`. Cleanest: make `acceptInvite` write the member row server-side via a Cloud Function with the Admin SDK, and set rules to `allow write: if false` on the subcollection (clients never write directly). (2) If staying client-side, require an invite-token to be presented in `request.resource.data.inviteToken` and validate it in rules via `get(...)` against the matching invite doc. Same fix on `leagueMembers` index."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 38,
+                  "endLine": 42
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "leagues/{leagueId}/members"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-league-members-self-add"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "critical",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-602",
+          "level": "error",
+          "message": {
+            "text": "[SEC-003] Game state writable by ANY league member at any time — server has no notion of \"whose turn\"\n\nThe rule's own comment is the giveaway: \"Live turn-based play: ANY league member may advance the shared game state (the app gates who can act on their turn). Last-write-wins is acceptable because turns are serialized in the UI.\" That gating is entirely in the React client (`useTurnControl.canActAs`). Anyone with a browser console or a curl request can call `updateDoc(doc(db, 'leagues', L, 'games', G), { gameState: <anything> })` and force any draft outcome — claim wins they didn't earn, undo a swap, set `phase: 'complete'` with a fabricated `pickOrder`, etc. Combined with SEC-002, a non-member can even do this by self-adding first.\n\nImpact: The entire draft outcome is forgeable by any participant. In a drinking-game context that's mostly a trust/pranking concern, but the app exists to BE the source of truth for draft order — and draft results are written to `draftResults` (rules:79 — also writable by anyone, see SEC-005). A bored member can rewrite history.\n\nFix: Move the turn check server-side. Cleanest: a Cloud Function `submitGameAction` takes the action + the prior `state.actionCounter` (optimistic-lock token); the function re-runs the reducer, validates `request.auth.uid === turnOrder[currentTurnIndex].uid` (or commissioner override), and writes the new state. Rules then become `allow update: if false` on the games doc. Cheaper alternative if you want to stay client-only: rules-level check `request.auth.uid == request.resource.data.gameState.turnOrder[request.resource.data.gameState.currentTurnIndex].uid` — but the rules language is constrained, and a determined attacker can craft a payload that satisfies it while corrupting unrelated fields, so the Cloud Function path is safer."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 63,
+                  "endLine": 73
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "leagues/{leagueId}/games/{gameId}"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-game-state-no-turn-validation"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "high",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-639",
+          "level": "error",
+          "message": {
+            "text": "[SEC-004] `inviteTokens` collection is world-readable and world-writable for any signed-in user\n\n`allow read: if request.auth != null; allow write: if request.auth != null;` on `/inviteTokens/{token}`. Two problems: (1) write — an attacker can overwrite a victim's pending invite, swapping `leagueId`/`inviteId`/`expiresAt`, or create fake token rows pointing at leagues they want to social-engineer joins into. (2) read with no scoping at the collection level means `getDocs(collection(db, 'inviteTokens'))` returns every outstanding token. The 6-char token from `randomToken()` is then pointless as a secret because all of them are listable in one round-trip.\n\nImpact: Any signed-in user can enumerate every pending invite (token + leagueId), then call `acceptInvite(token, …)` to join any league with a pending invite. Combined with SEC-002 this is redundant exposure — but each path needs to be closed independently.\n\nFix: Tokens shouldn't be readable except by the recipient (which Firestore can't easily express without out-of-band identity). Practical fix: move invite-token lookup behind a Cloud Function (`POST /lookupInvite { token }`), set rules to `allow read, write: if false` on `inviteTokens`. If keeping client-side: require the caller to know the exact token (rules: `allow get: if request.auth != null; allow list: if false`) AND tighten writes to creation-only by the league's commissioner."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 18,
+                  "endLine": 21
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "inviteTokens"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-invite-tokens-world-readwrite"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "high",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-285",
+          "level": "error",
+          "message": {
+            "text": "[SEC-005] `draftResults` create permission is not scoped to league membership\n\n`allow create: if request.auth != null;` — no `exists(...members/$(request.auth.uid))` check. Read requires membership; create does not. Any signed-in user can write fake draft-result documents into any league's history, regardless of whether they belong to that league.\n\nImpact: Permanent corruption of league history. The GameHistory UI reads from `draftResults`, so fake entries appear next to real ones. Hard for the commissioner to clean up without manual Firestore-console deletes.\n\nFix: Match the read rule: `allow create: if request.auth != null && exists(/databases/$(database)/documents/leagues/$(leagueId)/members/$(request.auth.uid));` — and ideally restrict to the commissioner or the game's `commissionerId` (results are usually written once at game completion). Also consider write-only-once: `allow update, delete: if false` so a finalized history can't be retroactively edited."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 76,
+                  "endLine": 80
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "leagues/{leagueId}/draftResults"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-draftresults-world-create"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "high",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-285",
+          "level": "warning",
+          "message": {
+            "text": "[SEC-006] Invite subcollection allows update/delete by any signed-in user\n\n`allow update: if request.auth != null; allow delete: if request.auth != null;` lets any signed-in user revoke, expire, or modify any pending invite for any league. Less impactful than SEC-002/SEC-004 because the invite tokens themselves are already exposed by SEC-004, but it adds griefing potential (revoke all pending invites in someone else's league).\n\nImpact: Denial of joining: an attacker silently revokes every pending invite for a target league before the recipients can use them.\n\nFix: Restrict update/delete to the league's commissioner — `get(/databases/$(database)/documents/leagues/$(leagueId)).data.commissionerId == request.auth.uid`. Match the `create` rule that already exists."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "firestore.rules"
+                },
+                "region": {
+                  "startLine": 45,
+                  "endLine": 52
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "leagues/{leagueId}/invites"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-invites-world-update-delete"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "medium",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-613",
+          "level": "warning",
+          "message": {
+            "text": "[SEC-007] Invite expiration is checked on the client only\n\n`lookupInviteToken` does `if (new Date(expiresAt) < new Date()) return null;` — entirely client-side. An attacker who finds an expired token (per SEC-004 they can list all of them) can simply skip the check by calling `acceptInvite` directly without going through `lookupInviteToken`. Or just set their system clock back. The Firestore rules don't validate `expiresAt`.\n\nImpact: Expired invites remain effectively usable. Combined with SEC-002/SEC-004, this is a third path to joining arbitrary leagues.\n\nFix: Enforce expiry in Firestore rules: when accepting an invite (creating the member row, in the Cloud Function recommended by SEC-002), check that `request.time < invite.expiresAt`. The client check is fine as a UX nicety but cannot be the gate."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/hooks/useLeague.ts"
+                },
+                "region": {
+                  "startLine": 174,
+                  "endLine": 188
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "lookupInviteToken"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "sec-invite-expiry-client-side"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "medium",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-1395",
+          "level": "note",
+          "message": {
+            "text": "[SEC-008] Vulnerable dependency: esbuild (moderate)\n\n`npm audit` flagged esbuild moderate — \"any website can send requests to the dev server and read the response\". Validated: this is a dev-server-only issue. Production builds are static (built bundle → Vercel CDN), so impact in production is zero. Downgraded from scanner's medium.\n\nImpact: Local dev only — a malicious site you visit while `npm run dev` is running could read your dev server's responses. Standard developer-machine hygiene applies.\n\nFix: `npm audit fix` to pull the patched esbuild. Vite typically requires the bundle bump to land."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "esbuild"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "4dbff0a8f76e18d1"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "low",
+            "confidence": "high",
+            "source": "scanner:npm-audit",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "security/CWE-1395",
+          "level": "note",
+          "message": {
+            "text": "[SEC-009] Vulnerable dependency: vite (moderate)\n\nPath traversal in optimized-deps `.map` handling. Dev-server-only. Same risk class as SEC-008.\n\nFix: `npm audit fix`."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package.json"
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "vite"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "576ba11a2557d146"
+          },
+          "properties": {
+            "dimension": "security",
+            "severity": "low",
+            "confidence": "high",
+            "source": "scanner:npm-audit",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "performance/PERF-001",
+          "level": "warning",
+          "message": {
+            "text": "[PERF-001] `useMyLeagues` does an N+1 read: one `getDoc` per league\n\nAfter fetching the user's `leagueMembers` index rows, the hook does `Promise.all(leagueIds.map(id => getDoc(doc(db, 'leagues', id))))` — one round-trip per league. Each `getDoc` is a billed Firestore read. Wall-clock is dominated by the longest round-trip, but cost scales linearly.\n\nImpact: Small at current scale (a user in a few leagues = a few extra reads per dashboard mount). Becomes visible if power users are in 10+ leagues. Also: dashboard mount fires it on every navigation since `fetch` runs on every mount of `useMyLeagues`.\n\nFix: Use Firestore's `in` query: `query(collection(db, 'leagues'), where(documentId(), 'in', leagueIds))` — one round-trip for up to 30 IDs. For >30 leagues, chunk into batches of 30 and `Promise.all`. Also consider denormalizing league name/icon onto the `leagueMembers` index so the dashboard list renders from the first query alone."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/hooks/useLeague.ts"
+                },
+                "region": {
+                  "startLine": 28,
+                  "endLine": 53
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "useMyLeagues"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "perf-mylegues-n-plus-one"
+          },
+          "properties": {
+            "dimension": "performance",
+            "severity": "medium",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "correctness/CWE-662",
+          "level": "error",
+          "message": {
+            "text": "[BUG-001] `acceptInvite` is not atomic — 4 sequential writes leave half-joined state on failure\n\nFour separate writes run sequentially, each awaited but with no transaction: (1) `setDoc(.../members/{uid})`, (2) `setDoc(leagueMembers/{leagueId}_{uid})`, (3) `updateDoc(.../invites/{inviteId}, status: 'accepted')`, (4) `deleteDoc(inviteTokens/{token})`. A network drop, Firestore retry exhaustion, or the user closing the tab between any two leaves the system in a partial state: e.g. user added to members but invite still pending (they can join again — fine), or invite marked accepted but `leagueMembers` index missing (they appear in the league but their league list won't show it — a confusing UX bug).\n\nImpact: Half-joined users report \"I can't see the league on my dashboard but I can open it from the link\" — a real support headache. Worst case: the index row exists but the member doc doesn't — the user appears in their own dashboard but can't access anything in the league (read rules require the member doc).\n\nFix: Wrap all four writes in `runTransaction` or a `writeBatch`: `const batch = writeBatch(db); batch.set(memberRef, …); batch.set(indexRef, …); batch.update(inviteRef, …); batch.delete(tokenRef); await batch.commit();`. A batched write is atomic across Firestore documents (up to 500 ops) and is exactly the right primitive here."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/hooks/useLeague.ts"
+                },
+                "region": {
+                  "startLine": 190,
+                  "endLine": 205
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "acceptInvite"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "bug-accept-invite-not-atomic"
+          },
+          "properties": {
+            "dimension": "correctness",
+            "severity": "high",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        },
+        {
+          "ruleId": "correctness/CWE-367",
+          "level": "warning",
+          "message": {
+            "text": "[BUG-002] Username uniqueness has a TOCTOU race — two users can claim the same username\n\n`isUsernameAvailable` runs `query(users where username == X)` — if empty, the UI lets the user submit. `createProfile` then `setDoc(doc(db, 'users', uid), {username})` — but there's no Firestore-enforced uniqueness on `username`. Two users in concurrent signup flows can both pass the availability check and both write the same username. The same race exists in `signInWithGoogle`'s username-derivation loop (AuthContext:80-87) — `getDocs` then `setDoc` with no lock.\n\nImpact: Duplicate usernames silently coexist. Any feature that assumes uniqueness (mentions, lookups by username, leaderboards) returns ambiguous results. Hard to clean up after — usernames are now intermingled with identity.\n\nFix: Use a separate `usernames/{username}` collection where the docId IS the username — Firestore guarantees doc-ID uniqueness. In a transaction: `runTransaction(tx => { tx.get(usernamesRef) → if exists, throw; tx.set(usernamesRef, {uid}); tx.set(userRef, {username, …}); })`. Add a Firestore rule that prevents writing `usernames/X` if it already exists. On username change, transactionally delete the old doc and create the new one."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/store/AuthContext.tsx"
+                },
+                "region": {
+                  "startLine": 102,
+                  "endLine": 114
+                }
+              },
+              "logicalLocations": [
+                {
+                  "name": "createProfile"
+                }
+              ]
+            }
+          ],
+          "partialFingerprints": {
+            "appReviewFingerprint": "bug-username-uniqueness-toctou"
+          },
+          "properties": {
+            "dimension": "correctness",
+            "severity": "medium",
+            "confidence": "high",
+            "source": "llm",
+            "status": "open"
+          }
+        }
+      ]
+    }
+  ]
+}
