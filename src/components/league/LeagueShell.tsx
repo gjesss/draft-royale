@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { useLeague, useDraftHistory } from '../../hooks/useLeague'
 import { Game } from '../../types/db'
+import { computeStandings, computeActivity, PlayerStat, DraftGroup } from '../../utils/standings'
 import LeagueHeader from '../layout/LeagueHeader'
 import BottomNav, { NavTab } from '../layout/BottomNav'
 import DraftBoard, { BoardCell } from './DraftBoard'
 import InvitePanel from './InvitePanel'
-import GameHistory from './GameHistory'
+import Standings from './Standings'
+import ActivityFeed from './ActivityFeed'
+import MemberSheet from './MemberSheet'
 import ProfileScreen from '../ProfileScreen'
 import Avatar from '../ui/Avatar'
 
@@ -21,7 +24,13 @@ interface Props {
 export default function LeagueShell({ leagueId, onStartGame, onOpenSwitcher, onOpenRules, onExit }: Props) {
   const { user } = useAuth()
   const { league, games, loading, error, createGame, createSeason } = useLeague(leagueId)
+  const { history } = useDraftHistory(leagueId)
   const [tab, setTab] = useState<NavTab>('board')
+  const [selectedMember, setSelectedMember] = useState<string | null>(null)
+
+  const stats = computeStandings(history)
+  const activity = computeActivity(history)
+  const selectedStat = stats.find(s => s.name === selectedMember) ?? null
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading league…</div>
@@ -49,42 +58,48 @@ export default function LeagueShell({ leagueId, onStartGame, onOpenSwitcher, onO
       <div className="max-w-lg mx-auto">
         {tab === 'board' && (
           <BoardTab
-            leagueId={leagueId} games={games} isCommissioner={isCommissioner}
+            games={games} isCommissioner={isCommissioner}
             seasons={league.seasons} sport={league.sport}
+            history={history} activity={activity}
             createGame={createGame} createSeason={createSeason}
             onStartGame={onStartGame} userId={user?.uid ?? ''}
           />
         )}
-        {tab === 'members' && <MembersTab members={league.members} leagueId={leagueId} userId={user?.uid ?? ''} />}
+        {tab === 'members' && (
+          <MembersTab members={league.members} stats={stats} userId={user?.uid ?? ''}
+            onSelect={setSelectedMember} />
+        )}
         {tab === 'invite' && <div className="px-4 py-4"><InvitePanel leagueId={leagueId} isCommissioner={isCommissioner} leagueName={league.name} /></div>}
         {tab === 'profile' && <ProfileScreen onOpenRules={onOpenRules} />}
       </div>
+
+      {selectedStat && <MemberSheet stat={selectedStat} onClose={() => setSelectedMember(null)} />}
 
       <BottomNav active={tab} onChange={setTab} />
     </div>
   )
 }
 
-// ── Board tab: live/lobby games, start new, and the latest draft board ────────
-function BoardTab({ leagueId, games, isCommissioner, seasons, sport, createGame, createSeason, onStartGame, userId }: {
-  leagueId: string
+// ── Board tab: live games, start new, latest draft order, recent activity ─────
+function BoardTab({ games, isCommissioner, seasons, sport, history, activity, createGame, createSeason, onStartGame, userId }: {
   games: Game[]
   isCommissioner: boolean
   seasons: { id: string; name: string; year: number; status: string }[]
   sport: string
+  history: DraftGroup[]
+  activity: ReturnType<typeof computeActivity>
   createGame: (commissionerId: string, seasonId?: string) => Promise<{ data: { id: string } | null; error: unknown }>
   createSeason: (name: string, year: number, sport: string) => Promise<unknown>
   onStartGame: (gameId: string, isCommissioner: boolean) => void
   userId: string
 }) {
-  const { history } = useDraftHistory(leagueId)
   const [showNewSeason, setShowNewSeason] = useState(false)
   const [seasonName, setSeasonName] = useState('')
   const [seasonYear, setSeasonYear] = useState(new Date().getFullYear())
 
   const activeSeason = seasons.find(s => s.status === 'active')
   const liveGames = games.filter(g => g.status !== 'complete')
-  const latest = history[0] // most recent completed draft
+  const latest = history[0]
 
   const handleNewGame = async () => {
     const { data } = await createGame(userId, activeSeason?.id)
@@ -104,7 +119,6 @@ function BoardTab({ leagueId, games, isCommissioner, seasons, sport, createGame,
 
   return (
     <div className="px-4 py-4 space-y-5">
-      {/* Start / live game */}
       {isCommissioner && (
         <button className="btn-primary w-full py-4 text-base animate-pulse-cyan" onClick={handleNewGame}>
           🎱 Start New Draft
@@ -129,7 +143,6 @@ function BoardTab({ leagueId, games, isCommissioner, seasons, sport, createGame,
         </div>
       )}
 
-      {/* Season creation (commissioner, when none) */}
       {seasons.length === 0 && isCommissioner && (
         showNewSeason ? (
           <div className="card space-y-3 border-cyan-500/30">
@@ -168,37 +181,47 @@ function BoardTab({ leagueId, games, isCommissioner, seasons, sport, createGame,
           </div>
         )}
       </div>
+
+      {/* Recent activity */}
+      {activity.length > 0 && (
+        <div>
+          <p className="section-label mb-2">Recent Activity</p>
+          <ActivityFeed events={activity} limit={5} />
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Members tab: avatars + roles, with draft history below ────────────────────
-function MembersTab({ members, leagueId, userId }: {
+// ── Members tab: standings leaderboard + roster, tap → member profile ─────────
+function MembersTab({ members, stats, userId, onSelect }: {
   members: { userId: string; displayName: string; username: string; role: string }[]
-  leagueId: string
+  stats: PlayerStat[]
   userId: string
+  onSelect: (name: string) => void
 }) {
   return (
     <div className="px-4 py-4 space-y-5">
       <div>
+        <p className="section-label mb-2">Standings</p>
+        <Standings stats={stats} onSelect={onSelect} />
+      </div>
+
+      <div>
         <p className="section-label mb-2">Members · {members.length}</p>
         <div className="space-y-2">
           {members.map(m => (
-            <div key={m.userId} className="card flex items-center gap-3 py-2.5">
+            <button key={m.userId} onClick={() => onSelect(m.displayName)}
+              className="card-interactive w-full flex items-center gap-3 py-2.5 text-left">
               <Avatar name={m.displayName} seed={m.userId} size="md" ring={m.userId === userId} />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-white truncate">{m.displayName}{m.userId === userId && <span className="text-gray-500 font-normal"> (you)</span>}</p>
                 <p className="text-gray-500 text-xs truncate">@{m.username}</p>
               </div>
               {m.role === 'commissioner' && <span className="chip-accent">Commish</span>}
-            </div>
+            </button>
           ))}
         </div>
-      </div>
-
-      <div>
-        <p className="section-label mb-2">Draft History</p>
-        <GameHistory leagueId={leagueId} />
       </div>
     </div>
   )
