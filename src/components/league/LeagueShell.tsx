@@ -12,6 +12,7 @@ import ActivityFeed from './ActivityFeed'
 import MemberSheet from './MemberSheet'
 import ProfileScreen from '../ProfileScreen'
 import Avatar from '../ui/Avatar'
+import { SkeletonHub } from '../ui/Skeleton'
 
 interface Props {
   leagueId: string
@@ -32,9 +33,7 @@ export default function LeagueShell({ leagueId, onStartGame, onOpenSwitcher, onO
   const activity = computeActivity(history)
   const selectedStat = stats.find(s => s.name === selectedMember) ?? null
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading league…</div>
-  }
+  if (loading) return <SkeletonHub />
   if (!league || error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">

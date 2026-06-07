@@ -4,6 +4,7 @@ import { getLockedPlayerIds } from '../utils/gameLogic';
 import { useMockDriver } from '../hooks/useMockDriver';
 import { useTurnControl } from '../hooks/useTurnControl';
 import DraftBoard, { BoardCell } from './league/DraftBoard';
+import Avatar from './ui/Avatar';
 import ShotgunOverflowModal from './modals/ShotgunOverflowModal';
 import DrawResultModal from './modals/DrawResultModal';
 import ChallengeModal from './modals/ChallengeModal';
@@ -172,9 +173,12 @@ export default function GameBoard() {
               const isLocked = lockedIds.has(p.id);
               return (
                 <div key={p.id} className={`card flex items-center gap-3 ${isLocked ? 'border-yellow-600/50' : ''}`}>
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm shrink-0
-                    ${isLocked ? 'bg-yellow-500 text-black' : slot ? 'bg-cyan-500/20 text-cyan-400' : 'bg-royal-muted text-gray-500'}`}>
-                    {isLocked ? '👑' : slot ? `#${slot.position}` : '–'}
+                  <div className="relative shrink-0">
+                    <Avatar name={p.name} seed={p.uid ?? p.id} size="md" ring={isLocked} />
+                    <span className={`absolute -bottom-1 -right-1 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-bold border border-royal-dark
+                      ${isLocked ? 'bg-yellow-500 text-black' : slot ? 'bg-cyan-500 text-black' : 'bg-royal-muted text-gray-400'}`}>
+                      {isLocked ? '👑' : slot ? slot.position : '–'}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`font-semibold truncate ${isLocked ? 'text-yellow-400' : 'text-white'}`}>{p.name}</p>

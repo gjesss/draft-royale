@@ -16,6 +16,7 @@ import GameBoard from './components/GameBoard'
 import Complete from './components/Complete'
 import Rules from './components/Rules'
 import { TrophyIcon } from './components/Logo'
+import UpdatePrompt from './components/ui/UpdatePrompt'
 
 const LAST_LEAGUE_KEY = 'dr.lastLeagueId'
 
@@ -140,6 +141,7 @@ export default function App() {
       <GameProvider>
         <div className="min-h-screen bg-royal-dark text-white">
           <AppRouter />
+          <UpdatePrompt />
         </div>
       </GameProvider>
     </AuthProvider>

@@ -6,6 +6,7 @@ import { useMyLeagues } from '../../hooks/useLeague'
 import { TrophyIcon } from '../Logo'
 import { TurnOrderMode, AbsentBehavior, BallMode } from '../../types/game'
 import Avatar from '../ui/Avatar'
+import { SkeletonList } from '../ui/Skeleton'
 
 interface Props {
   onSelectLeague: (leagueId: string) => void
@@ -100,7 +101,7 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
         </div>
 
         {loading ? (
-          <div className="text-center py-10 text-gray-600">Loading...</div>
+          <SkeletonList rows={3} />
         ) : leagues.length === 0 ? (
           <div className="card text-center py-8">
             <p className="text-4xl mb-3">🏈</p>

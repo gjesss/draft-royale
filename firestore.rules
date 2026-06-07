@@ -76,10 +76,11 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
         && docId == request.resource.data.leagueId + '_' + request.auth.uid
-        && hasValidInviteToken(
-             request.resource.data.leagueId,
-             request.resource.data.get('inviteToken', '')
-           );
+        && (isLeagueCommissioner(request.resource.data.leagueId)
+            || hasValidInviteToken(
+                 request.resource.data.leagueId,
+                 request.resource.data.get('inviteToken', '')
+               ));
       // Allow the owner to remove their own index row (leave-a-league flow).
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       allow update: if false;
@@ -114,10 +115,14 @@ service cloud.firestore {
       // ── Members subcollection ────────────────────────────────────────────
       match /members/{memberId} {
         allow read: if isLeagueMember(leagueId);
-        // Self-join — must be claiming your own seat, and must present a valid
-        // invite token for THIS league.
+        // Two valid ways to add yourself as a member of your own seat:
+        //   (a) you just created the league (you're its commissioner), OR
+        //   (b) you present a valid invite token for THIS league.
+        // The league doc (with commissionerId) is created before this member
+        // write, so isLeagueCommissioner() resolves true for the creator.
         allow create: if self(memberId)
-          && hasValidInviteToken(leagueId, request.resource.data.get('inviteToken', ''));
+          && (isLeagueCommissioner(leagueId)
+              || hasValidInviteToken(leagueId, request.resource.data.get('inviteToken', '')));
         // Self-edit displayName/etc.; commissioner can edit anyone.
         allow update: if self(memberId) || isLeagueCommissioner(leagueId);
         // Leave: own seat. Commissioner can remove any member.
