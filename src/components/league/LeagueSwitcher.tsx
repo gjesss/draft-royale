@@ -7,11 +7,13 @@ interface Props {
   onSelect: (leagueId: string) => void
   onCreate: () => void
   onJoin: () => void
+  onHome: () => void
+  onMock: () => void
   onClose: () => void
 }
 
 /** Translucent, bottom-anchored league switcher (Sleeper pattern). */
-export default function LeagueSwitcher({ currentLeagueId, onSelect, onCreate, onJoin, onClose }: Props) {
+export default function LeagueSwitcher({ currentLeagueId, onSelect, onCreate, onJoin, onHome, onMock, onClose }: Props) {
   const { user } = useAuth()
   const { leagues } = useMyLeagues(user?.uid ?? null)
   // Most-recent first; current league pinned to the bottom (thumb-reachable).
@@ -50,6 +52,10 @@ export default function LeagueSwitcher({ currentLeagueId, onSelect, onCreate, on
           <div className="flex gap-2 mt-4">
             <button className="btn-primary flex-1 py-3 text-sm" onClick={onCreate}>+ Create League</button>
             <button className="btn-ghost flex-1 py-3 text-sm" onClick={onJoin}>🔗 Join</button>
+          </div>
+          <div className="flex gap-2 mt-2">
+            <button className="btn-ghost flex-1 py-3 text-sm" onClick={onHome}>🏠 Home</button>
+            <button className="btn-ghost flex-1 py-3 text-sm" onClick={onMock}>🎮 Mock Round</button>
           </div>
         </div>
       </div>

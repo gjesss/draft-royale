@@ -5,6 +5,7 @@ import { useAuth } from '../../store/AuthContext'
 import { useMyLeagues } from '../../hooks/useLeague'
 import { TrophyIcon } from '../Logo'
 import { TurnOrderMode, AbsentBehavior, BallMode } from '../../types/game'
+import Avatar from '../ui/Avatar'
 
 interface Props {
   onSelectLeague: (leagueId: string) => void
@@ -63,13 +64,30 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-8 pb-28">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold tracking-wide">
-          <span className="text-white">DRAFT</span>{' '}
-          <span className="neon-text">ROYALE</span>
-        </h1>
-        <span className="text-gray-500 text-sm">@{profile?.username ?? '...'}</span>
+      {/* Greeting */}
+      <div className="flex items-center gap-3 mb-2">
+        <Avatar name={profile?.displayName ?? 'You'} seed={profile?.uid} size="lg" />
+        <div>
+          <p className="text-gray-400 text-sm">Welcome back,</p>
+          <h1 className="text-2xl font-bold text-white leading-tight">{profile?.displayName ?? 'Player'}</h1>
+        </div>
       </div>
+      <p className="text-gray-600 text-xs mb-6">
+        <span className="text-white">DRAFT</span> <span className="neon-text">ROYALE</span> · @{profile?.username ?? '...'}
+      </p>
+
+      {/* Try a mock round — available to everyone */}
+      {onMockDraft && (
+        <button onClick={onMockDraft}
+          className="card-interactive w-full flex items-center gap-3 mb-6 border-cyan-500/30">
+          <span className="text-3xl">🎮</span>
+          <div className="flex-1 text-left">
+            <p className="font-bold text-white">Try a Mock Round</p>
+            <p className="text-gray-500 text-sm">Practice solo vs. auto-players — no league needed</p>
+          </div>
+          <span className="text-cyan-400">›</span>
+        </button>
+      )}
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -92,9 +110,10 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
         ) : (
           leagues.map(l => (
             <button key={l.id} onClick={() => onSelectLeague(l.id)}
-              className="card w-full flex items-center justify-between hover:border-cyan-500/50 transition-colors active:scale-[0.99] text-left">
-              <div>
-                <p className="font-bold text-white">{l.name}</p>
+              className="card-interactive w-full flex items-center gap-3 text-left">
+              <Avatar name={l.name} seed={l.id} size="md" />
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-white truncate">{l.name}</p>
                 <p className="text-gray-500 text-sm mt-0.5">{l.sport}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -192,23 +211,6 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
         )}
       </div>
 
-      {/* Practice / onboarding */}
-      {onMockDraft && (
-        <div className="mt-8 pt-5 border-t border-royal-border">
-          <p className="text-gray-400 text-sm uppercase tracking-wide font-medium mb-2">Practice</p>
-          <button
-            onClick={onMockDraft}
-            className="card w-full flex items-center gap-3 hover:border-cyan-500/50 transition-colors active:scale-[0.99] text-left"
-          >
-            <span className="text-2xl">🎮</span>
-            <div className="flex-1">
-              <p className="font-bold text-white">Mock Draft</p>
-              <p className="text-gray-500 text-sm">Solo practice vs. auto-players — learn the flow in 2 minutes</p>
-            </div>
-            <span className="text-gray-600">›</span>
-          </button>
-        </div>
-      )}
     </div>
   )
 }

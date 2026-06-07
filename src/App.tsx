@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './store/AuthContext'
 import { GameProvider, useGame } from './store/GameContext'
-import { useLeague, useMyLeagues } from './hooks/useLeague'
+import { useLeague } from './hooks/useLeague'
 
 import AuthScreen from './components/auth/AuthScreen'
 import ProfileSetup from './components/auth/ProfileSetup'
@@ -28,27 +28,17 @@ type FullScreen =
 function AppRouter() {
   const { user, profile, loading } = useAuth()
   const { state: gameState } = useGame()
-  const { leagues } = useMyLeagues(user?.uid ?? null)
 
-  const [currentLeagueId, setCurrentLeagueId] = useState<string | null>(
-    () => localStorage.getItem(LAST_LEAGUE_KEY)
-  )
+  // Everyone is greeted with the Home dashboard; entering a league is a tap away.
+  const [currentLeagueId, setCurrentLeagueId] = useState<string | null>(null)
   const [fullScreen, setFullScreen] = useState<FullScreen>(null)
   const [switcherOpen, setSwitcherOpen] = useState(false)
   const [showRules, setShowRules] = useState(false)
 
-  // Persist the active league
+  // Remember the last league for the switcher's "current" marker (not auto-entered)
   useEffect(() => {
     if (currentLeagueId) localStorage.setItem(LAST_LEAGUE_KEY, currentLeagueId)
   }, [currentLeagueId])
-
-  // Default into the most-recent league once they load (if none chosen yet)
-  useEffect(() => {
-    if (!currentLeagueId && leagues.length > 0) {
-      const recent = [...leagues].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0]
-      setCurrentLeagueId(recent.id)
-    }
-  }, [leagues, currentLeagueId])
 
   // Deep link: /join/CODE
   useEffect(() => {
@@ -120,6 +110,8 @@ function AppRouter() {
           onSelect={selectLeague}
           onCreate={() => { setSwitcherOpen(false); setCurrentLeagueId(null); localStorage.removeItem(LAST_LEAGUE_KEY) }}
           onJoin={() => { setSwitcherOpen(false); setFullScreen({ kind: 'join' }) }}
+          onHome={() => { setSwitcherOpen(false); setCurrentLeagueId(null); localStorage.removeItem(LAST_LEAGUE_KEY) }}
+          onMock={() => { setSwitcherOpen(false); setFullScreen({ kind: 'mock' }) }}
           onClose={() => setSwitcherOpen(false)}
         />
       )}
