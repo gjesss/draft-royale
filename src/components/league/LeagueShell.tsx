@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { useLeague, useDraftHistory } from '../../hooks/useLeague'
 import { Game } from '../../types/db'
@@ -30,8 +30,8 @@ export default function LeagueShell({ leagueId, onStartGame, onOpenSwitcher, onO
   const [tab, setTab] = useState<NavTab>('board')
   const [selectedMember, setSelectedMember] = useState<string | null>(null)
 
-  const stats = computeStandings(history)
-  const activity = computeActivity(history)
+  const stats = useMemo(() => computeStandings(history), [history])
+  const activity = useMemo(() => computeActivity(history), [history])
   const selectedStat = stats.find(s => s.name === selectedMember) ?? null
 
   if (loading) return <SkeletonHub />

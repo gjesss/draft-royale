@@ -37,7 +37,7 @@ export default function GameBoard() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-royal-border">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="" width={32} height={32} className="object-contain" />
+          <img src="/logo-192.png" alt="" width={32} height={32} className="object-contain" />
           <div>
             <h1 className="text-base font-bold neon-text tracking-wide leading-none">DRAFT ROYALE</h1>
             <p className="text-gray-500 text-xs mt-0.5">{ballsLeft} balls remaining</p>

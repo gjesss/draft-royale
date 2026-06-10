@@ -11,7 +11,7 @@ interface LogoProps {
 export function TrophyIcon({ size = 48, className = '' }: LogoProps) {
   return (
     <img
-      src="/logo.png"
+      src="/logo-192.png"
       alt="Draft Royale"
       width={size}
       height={size}
@@ -25,7 +25,7 @@ export function TrophyIcon({ size = 48, className = '' }: LogoProps) {
 export function LogoMark({ size = 200 }: LogoProps) {
   return (
     <img
-      src="/logo.png"
+      src="/logo-512.png"
       alt="Draft Royale"
       width={size}
       height={size}

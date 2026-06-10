@@ -257,7 +257,8 @@ export function useDraftHistory(leagueId: string | null) {
     getDocs(
       query(
         collection(db, 'leagues', leagueId, 'draftResults'),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(300) // cap reads — covers ~25 recent full drafts (PERF-102)
       )
     ).then(snap => {
       const map = new Map<string, DraftResult[]>()
