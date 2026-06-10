@@ -12,6 +12,7 @@ import ActivityFeed from './ActivityFeed'
 import MemberSheet from './MemberSheet'
 import ProfileScreen from '../ProfileScreen'
 import Avatar from '../ui/Avatar'
+import Icon from '../ui/Icon'
 import { SkeletonHub } from '../ui/Skeleton'
 
 interface Props {
@@ -119,8 +120,8 @@ function BoardTab({ games, isCommissioner, seasons, sport, history, activity, cr
   return (
     <div className="px-4 py-4 space-y-5">
       {isCommissioner && (
-        <button className="btn-primary w-full py-4 text-base animate-pulse-cyan" onClick={handleNewGame}>
-          🎱 Start New Draft
+        <button className="btn-primary w-full py-4 text-base animate-pulse-cyan flex items-center justify-center gap-2" onClick={handleNewGame}>
+          <Icon name="play" size={18} /> Start New Draft
         </button>
       )}
 
@@ -131,9 +132,11 @@ function BoardTab({ games, isCommissioner, seasons, sport, history, activity, cr
             <button key={g.id} onClick={() => onStartGame(g.id, g.commissionerId === userId)}
               className="card-interactive w-full flex items-center justify-between">
               <div className="text-left">
-                <p className="font-semibold text-white text-sm">Draft — {new Date(g.createdAt).toLocaleDateString()}</p>
-                <p className={`text-xs mt-0.5 ${g.status === 'playing' ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {g.status === 'playing' ? '🟢 Live now' : '⏳ Lobby'}
+                <p className="font-semibold text-white text-sm">Draft · {new Date(g.createdAt).toLocaleDateString()}</p>
+                <p className={`text-xs mt-0.5 flex items-center gap-1.5 uppercase tracking-wide font-semibold ${g.status === 'playing' ? 'text-cyan-400' : 'text-gold-400'}`}>
+                  {g.status === 'playing'
+                    ? <><span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Live now</>
+                    : <><Icon name="clock" size={12} /> Lobby</>}
                 </p>
               </div>
               <span className="chip-accent">{g.status === 'lobby' && g.commissionerId === userId ? 'Open' : 'Join'}</span>
@@ -172,10 +175,10 @@ function BoardTab({ games, isCommissioner, seasons, sport, history, activity, cr
           <DraftBoard cells={cells} />
         ) : (
           <div className="card text-center py-10">
-            <p className="text-4xl mb-2">🎱</p>
-            <p className="text-gray-400 text-sm">No drafts yet.</p>
+            <Icon name="target" size={32} className="mx-auto text-gray-600 mb-2" />
+            <p className="text-gray-300 text-sm font-semibold">No drafts yet</p>
             <p className="text-gray-600 text-xs mt-1">
-              {isCommissioner ? 'Tap "Start New Draft" to run one.' : 'Waiting for the commissioner to start a draft.'}
+              {isCommissioner ? 'Hit Start New Draft to run one.' : 'Waiting on the commissioner to start a draft.'}
             </p>
           </div>
         )}

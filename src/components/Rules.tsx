@@ -1,4 +1,5 @@
 import { useGame } from '../store/GameContext';
+import Icon from './ui/Icon';
 
 interface RulesProps {
   /** When provided, the back button calls this instead of dispatching a game navigation. */
@@ -40,24 +41,24 @@ export default function Rules({ onBack }: RulesProps) {
 
         {/* Ball Options */}
         <div className="card">
-          <h3 className="text-white font-bold text-base mb-3">🎱 Ball Options</h3>
+          <h3 className="text-white font-bold text-base mb-3">Ball Options</h3>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">🎯</span>
+              <Icon name="target" size={22} className="text-cyan-400 mt-0.5 shrink-0" />
               <div>
                 <p className="text-cyan-400 font-semibold">Pick Ball <span className="text-gray-500 font-normal text-xs">– 1 per player</span></p>
                 <p className="text-gray-400 text-sm">When drawn, that player is assigned the next open draft pick position.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-2xl">🔄</span>
+              <Icon name="refresh" size={22} className="text-violet-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-purple-400 font-semibold">Pick Swap <span className="text-gray-500 font-normal text-xs">– set by commissioner</span></p>
+                <p className="text-violet-400 font-semibold">Pick Swap <span className="text-gray-500 font-normal text-xs">– set by commissioner</span></p>
                 <p className="text-gray-400 text-sm">Challenge any pick position to a mini-game. Winner takes that pick.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <span className="text-2xl">🍺</span>
+              <Icon name="cup" size={22} className="text-orange-400 mt-0.5 shrink-0" />
               <div>
                 <p className="text-orange-400 font-semibold">Shotgun <span className="text-gray-500 font-normal text-xs">– set by commissioner</span></p>
                 <p className="text-gray-400 text-sm">Shotgun a beer! Max 3 per player. Extras must be gifted to another player.</p>
@@ -72,7 +73,7 @@ export default function Rules({ onBack }: RulesProps) {
 
         {/* Core Rules */}
         <div className="card">
-          <h3 className="text-white font-bold text-base mb-3">📜 Core Rules</h3>
+          <h3 className="text-white font-bold text-base mb-3">Core Rules</h3>
           <ol className="space-y-3 text-sm text-gray-300">
             <li className="flex gap-2">
               <span className="text-cyan-400 font-bold shrink-0">1.</span>
@@ -105,26 +106,26 @@ export default function Rules({ onBack }: RulesProps) {
 
         {/* Challenge Games */}
         <div className="card">
-          <h3 className="text-white font-bold text-base mb-3">⚔️ Challenge Games</h3>
+          <h3 className="text-white font-bold text-base mb-3">Challenge Games</h3>
           <div className="space-y-3 text-sm">
             <div className="border-b border-royal-border pb-3">
-              <p className="text-white font-semibold">🏓 Beer Pong <span className="text-gray-500 font-normal">(6 cups)</span></p>
+              <p className="text-white font-semibold">Beer Pong <span className="text-gray-500 font-normal">(6 cups)</span></p>
               <p className="text-gray-400">5 min max. Most cups wins. If tied after time, first team to gain the lead after a full round of shots wins.</p>
             </div>
             <div className="border-b border-royal-border pb-3">
-              <p className="text-white font-semibold">🪙 Quarters <span className="text-gray-500 font-normal">(first to 3)</span></p>
+              <p className="text-white font-semibold">Quarters <span className="text-gray-500 font-normal">(first to 3)</span></p>
               <p className="text-gray-400">5 min max. Most made wins. If tied, first to gain the lead after a full round wins.</p>
             </div>
             <div className="border-b border-royal-border pb-3">
-              <p className="text-white font-semibold">🥤 Flip Cup 1v1 <span className="text-gray-500 font-normal">(3 cups)</span></p>
+              <p className="text-white font-semibold">Flip Cup 1v1 <span className="text-gray-500 font-normal">(3 cups)</span></p>
               <p className="text-gray-400">Chug your beer, then first to successfully flip all 3 cups wins.</p>
             </div>
             <div className="border-b border-royal-border pb-3">
-              <p className="text-white font-semibold">🃏 Hold'em</p>
+              <p className="text-white font-semibold">Hold'em</p>
               <p className="text-gray-400">Deal one hand (no betting). Flop → Turn → River (burn a card each). Best hand wins. Ties broken by high card playoff.</p>
             </div>
             <div>
-              <p className="text-white font-semibold">🂠 High Card</p>
+              <p className="text-white font-semibold">High Card</p>
               <p className="text-gray-400">Each player draws a single card. Highest card wins the pick swap. Re-draw if it's a tie.</p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { ActivityEvent, fmtDate } from '../../utils/standings'
+import Icon from '../ui/Icon'
 
 export default function ActivityFeed({ events, limit }: { events: ActivityEvent[]; limit?: number }) {
   const shown = limit ? events.slice(0, limit) : events
@@ -13,7 +14,9 @@ export default function ActivityFeed({ events, limit }: { events: ActivityEvent[
     <div className="space-y-2">
       {shown.map(e => (
         <div key={e.id} className="card flex items-center gap-3 py-2.5">
-          <span className="text-2xl shrink-0">{e.icon}</span>
+          <span className="w-9 h-9 rounded-lg bg-gold-900/40 border border-gold-700/40 flex items-center justify-center text-gold-400 shrink-0">
+            <Icon name={e.icon} size={18} />
+          </span>
           <div className="min-w-0 flex-1">
             <p className="text-white text-sm font-medium truncate">{e.title}</p>
             <p className="text-gray-500 text-xs truncate">{e.subtitle}</p>

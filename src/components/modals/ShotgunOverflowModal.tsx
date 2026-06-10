@@ -1,5 +1,12 @@
 import { useGame } from '../../store/GameContext';
 import { useTurnControl } from '../../hooks/useTurnControl';
+import Icon from '../ui/Icon';
+
+const Cups = () => (
+  <div className="flex justify-center gap-1.5 mb-3 text-orange-400">
+    {[0, 1, 2].map(i => <Icon key={i} name="cup" size={28} />)}
+  </div>
+);
 
 interface Props {
   playerId: string;
@@ -16,8 +23,8 @@ export default function ShotgunOverflowModal({ playerId }: Props) {
       <div className="modal-backdrop">
         <div className="modal-panel">
           <div className="p-8 text-center">
-            <p className="text-5xl mb-3">🍺🍺🍺</p>
-            <h2 className="text-2xl font-bold text-orange-400 mb-1">SHOTGUN OVERFLOW</h2>
+            <Cups />
+            <h2 className="text-2xl font-bold text-orange-400 mb-1">Shotgun Overflow</h2>
             <p className="text-white font-medium">{giver?.name}</p>
             <p className="text-gray-400 text-sm mt-1">is choosing who to give the extra shotgun to…</p>
           </div>
@@ -31,8 +38,8 @@ export default function ShotgunOverflowModal({ playerId }: Props) {
       <div className="modal-panel">
         <div className="p-6">
           <div className="text-center mb-6">
-            <p className="text-5xl mb-3">🍺🍺🍺</p>
-            <h2 className="text-2xl font-bold text-orange-400">SHOTGUN OVERFLOW!</h2>
+            <Cups />
+            <h2 className="text-2xl font-bold text-orange-400">Shotgun Overflow</h2>
             <p className="text-white mt-1 font-medium">{giver?.name}</p>
             <p className="text-gray-400 text-sm mt-1">
               already has 3 shotguns. Give this one to another player.
@@ -60,7 +67,7 @@ export default function ShotgunOverflowModal({ playerId }: Props) {
                     text-white transition-all active:scale-95"
                 >
                   <span className="font-medium">{p.name}</span>
-                  <span className="text-orange-400 text-sm">🍺×{p.shotgunCount} → 🍺×{p.shotgunCount + 1}</span>
+                  <span className="text-orange-400 text-sm">{p.shotgunCount} &rarr; {p.shotgunCount + 1} cups</span>
                 </button>
               ))}
             </div>

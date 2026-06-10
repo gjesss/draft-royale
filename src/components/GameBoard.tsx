@@ -5,6 +5,7 @@ import { useMockDriver } from '../hooks/useMockDriver';
 import { useTurnControl } from '../hooks/useTurnControl';
 import DraftBoard, { BoardCell } from './league/DraftBoard';
 import Avatar from './ui/Avatar';
+import Icon from './ui/Icon';
 import ShotgunOverflowModal from './modals/ShotgunOverflowModal';
 import DrawResultModal from './modals/DrawResultModal';
 import ChallengeModal from './modals/ChallengeModal';
@@ -44,13 +45,15 @@ export default function GameBoard() {
         </div>
         <div className="flex gap-1">
           <button
-            className="text-gray-400 hover:text-white p-3 text-lg touch-manipulation"
+            className="text-gray-400 hover:text-white p-2.5 touch-manipulation"
             onClick={() => dispatch({ type: 'NAVIGATE', phase: 'rules' })}
-          >📋</button>
+            aria-label="Rules"
+          ><Icon name="book" size={20} /></button>
           <button
-            className="text-gray-400 hover:text-red-400 p-3 text-lg touch-manipulation"
+            className="text-gray-400 hover:text-red-400 p-2.5 touch-manipulation"
             onClick={() => { if (confirm('End this game?')) dispatch({ type: 'NEW_GAME' }); }}
-          >✕</button>
+            aria-label="End game"
+          ><Icon name="x" size={20} /></button>
         </div>
       </div>
 
@@ -67,7 +70,7 @@ export default function GameBoard() {
             <svg width="80" height="80" viewBox="0 0 80 80">
               <circle cx="40" cy="40" r="34" fill="none" stroke="#1f2937" strokeWidth="6" />
               <circle
-                cx="40" cy="40" r="34" fill="none" stroke="#00d4ff" strokeWidth="6"
+                cx="40" cy="40" r="34" fill="none" stroke="#2BE36B" strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={`${2 * Math.PI * 34}`}
                 strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
@@ -83,17 +86,17 @@ export default function GameBoard() {
 
           {/* Draw button — fills remaining space */}
           <button
-            className={`flex-1 py-5 rounded-2xl font-bold text-xl transition-all duration-200 touch-manipulation
+            className={`flex-1 py-5 rounded-xl font-display font-bold uppercase tracking-jersey text-xl transition-all duration-150 touch-manipulation flex items-center justify-center gap-2
               ${canDraw
-                ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-neon active:scale-95 animate-pulse-cyan'
+                ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-neon active:scale-[0.98] animate-pulse-cyan'
                 : 'bg-royal-card border border-royal-border text-gray-600 cursor-not-allowed'
               }`}
             onClick={() => canDraw && dispatch({ type: 'DRAW_BALL' })}
             disabled={!canDraw}
           >
             {ballsLeft === 0
-              ? '🎉 Done!'
-              : isMyTurn ? '🎱 Draw Ball' : `⏳ ${drawer?.name ?? 'Player'}'s turn`}
+              ? 'Done'
+              : isMyTurn ? <><Icon name="target" size={22} /> Draw Ball</> : `${drawer?.name ?? 'Player'}'s turn`}
           </button>
         </div>
 
@@ -127,8 +130,8 @@ export default function GameBoard() {
         )}
 
         {activeChallenge && (
-          <div className="mt-3 bg-purple-900/30 border border-purple-600 rounded-xl px-4 py-2.5 text-center">
-            <p className="text-purple-300 text-sm font-medium">⚔️ Challenge in progress</p>
+          <div className="mt-3 bg-violet-900/30 border border-violet-600/60 rounded-xl px-4 py-2.5 text-center">
+            <p className="text-violet-300 text-sm font-semibold uppercase tracking-wide flex items-center justify-center gap-1.5"><Icon name="swords" size={15} /> Challenge in progress</p>
           </div>
         )}
       </div>
@@ -142,7 +145,7 @@ export default function GameBoard() {
             className={`flex-1 py-3 text-sm font-medium capitalize transition-colors touch-manipulation
               ${tab === t ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-500'}`}
           >
-            {t === 'picks' ? '📋 Draft Order' : '👤 Players'}
+            {t === 'picks' ? 'Draft Order' : 'Players'}
           </button>
         ))}
       </div>
@@ -172,33 +175,33 @@ export default function GameBoard() {
               const slot = pickSlots.find(s => s.playerId === p.id);
               const isLocked = lockedIds.has(p.id);
               return (
-                <div key={p.id} className={`card flex items-center gap-3 ${isLocked ? 'border-yellow-600/50' : ''}`}>
+                <div key={p.id} className={`card flex items-center gap-3 ${isLocked ? '!border-gold-700/50' : ''}`}>
                   <div className="relative shrink-0">
                     <Avatar name={p.name} seed={p.uid ?? p.id} size="md" ring={isLocked} />
-                    <span className={`absolute -bottom-1 -right-1 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-bold border border-royal-dark
-                      ${isLocked ? 'bg-yellow-500 text-black' : slot ? 'bg-cyan-500 text-black' : 'bg-royal-muted text-gray-400'}`}>
-                      {isLocked ? '👑' : slot ? slot.position : '–'}
+                    <span className={`absolute -bottom-1 -right-1 min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[10px] font-bold tnum border border-royal-dark
+                      ${isLocked ? 'bg-gold-400 text-black' : slot ? 'bg-cyan-500 text-black' : 'bg-royal-muted text-gray-400'}`}>
+                      {isLocked ? <Icon name="lock" size={10} strokeWidth={3} /> : slot ? slot.position : '–'}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`font-semibold truncate ${isLocked ? 'text-yellow-400' : 'text-white'}`}>{p.name}</p>
+                    <p className={`font-semibold truncate ${isLocked ? 'text-gold-400' : 'text-white'}`}>{p.name}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {isLocked && <span className="text-xs text-yellow-500">🔒 Pick locked</span>}
-                      {!isLocked && slot && <span className="text-xs text-gray-500">🛡 {slot.defenseCount}/2</span>}
+                      {isLocked && <span className="flex items-center gap-1 text-xs text-gold-500"><Icon name="lock" size={11} /> Locked</span>}
+                      {!isLocked && slot && <span className="flex items-center gap-1 text-xs text-gray-500"><Icon name="shield" size={11} /> {slot.defenseCount}/2</span>}
                       {p.pendingChallengePickPosition !== null && (
-                        <span className="text-xs text-yellow-400">⏳ Pick #{p.pendingChallengePickPosition}</span>
+                        <span className="flex items-center gap-1 text-xs text-gold-400"><Icon name="clock" size={11} /> Pick #{p.pendingChallengePickPosition}</span>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-0.5 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0" title="Shotgun count">
                     {[1, 2, 3].map(n => (
-                      <span key={n} className={`text-base ${n <= p.shotgunCount ? 'text-orange-400' : 'text-gray-700'}`}>🍺</span>
+                      <Icon key={n} name="cup" size={16} className={n <= p.shotgunCount ? 'text-orange-400' : 'text-royal-muted'} />
                     ))}
                   </div>
                 </div>
               );
             })}
-            <p className="text-gray-600 text-xs text-center pt-1">🍺 = shotgun count (max 3)</p>
+            <p className="text-gray-600 text-[11px] text-center pt-1 uppercase tracking-wide">Cups = shotguns drawn (max 3)</p>
           </div>
         )}
       </div>

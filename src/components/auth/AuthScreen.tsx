@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { LogoMark } from '../Logo'
+import Icon from '../ui/Icon'
 
 type Mode = 'login' | 'register'
 
@@ -45,7 +46,7 @@ export default function AuthScreen({ redirectNote }: Props) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="text-center max-w-sm">
-          <p className="text-5xl mb-4">📧</p>
+          <Icon name="message" size={44} className="mx-auto text-cyan-400 mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Check your email</h2>
           <p className="text-gray-400 mb-6 text-sm leading-relaxed">
             We sent a confirmation link to <strong className="text-white">{email}</strong>.

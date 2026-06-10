@@ -7,7 +7,7 @@ function PlayingCard({ card, faceUp }: { card?: Card; faceUp: boolean }) {
   if (!card || !faceUp) {
     return (
       <div className="w-20 h-28 rounded-xl bg-gradient-to-br from-cyan-700 to-cyan-900 border-2 border-cyan-600 flex items-center justify-center">
-        <span className="text-3xl opacity-60">🂠</span>
+        
       </div>
     );
   }
@@ -37,7 +37,7 @@ export default function HighCardGame({ challenge }: { challenge: Challenge }) {
   return (
     <div className="text-center">
       <div className="bg-black/50 border border-royal-border rounded-xl p-4 mb-4">
-        <p className="text-white font-bold text-lg">🂠 High Card</p>
+        <p className="text-white font-bold text-lg">High Card</p>
         <p className="text-gray-500 text-xs">Highest card wins the pick swap — re-draw on a tie</p>
       </div>
 
@@ -48,7 +48,7 @@ export default function HighCardGame({ challenge }: { challenge: Challenge }) {
           <PlayingCard card={mini?.challenger} faceUp={!!mini} />
           {mini && !tie && (
             <p className={`text-xs mt-1 font-bold ${challengerWon ? 'text-green-400' : 'text-gray-600'}`}>
-              {challengerWon ? '🏆 Wins' : '—'}
+              {challengerWon ? 'Wins' : '—'}
             </p>
           )}
         </div>
@@ -58,7 +58,7 @@ export default function HighCardGame({ challenge }: { challenge: Challenge }) {
           <PlayingCard card={mini?.defender} faceUp={!!mini} />
           {mini && !tie && (
             <p className={`text-xs mt-1 font-bold ${!challengerWon ? 'text-green-400' : 'text-gray-600'}`}>
-              {!challengerWon ? '🏆 Wins' : '—'}
+              {!challengerWon ? 'Wins' : '—'}
             </p>
           )}
         </div>
@@ -73,7 +73,7 @@ export default function HighCardGame({ challenge }: { challenge: Challenge }) {
         </p>
       ) : !mini ? (
         <button className="btn-primary w-full" onClick={() => dispatch({ type: 'DEAL_HIGH_CARD' })}>
-          🂠 Deal Cards
+          Deal Cards
         </button>
       ) : tie ? (
         <button className="btn-primary w-full" onClick={() => dispatch({ type: 'DEAL_HIGH_CARD' })}>

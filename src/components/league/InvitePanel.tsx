@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { useLeague } from '../../hooks/useLeague'
 import { LeagueInvite } from '../../types/db'
+import Icon from '../ui/Icon'
 
 interface Props { leagueId: string; isCommissioner: boolean; leagueName: string }
 
@@ -28,7 +29,7 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
 
   /** Pre-filled message used for SMS / share sheet */
   const messageFor = (token: string) =>
-    `🏆 Join my league "${leagueName}" on Draft Royale!\n\n` +
+    `Join my league "${leagueName}" on Draft Royale!\n\n` +
     `Tap to join: ${linkFor(token)}\n\n` +
     `Or enter code ${token} in the app.`
 
@@ -81,21 +82,21 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
           <div className="grid grid-cols-2 gap-2 mb-2">
             <a href={smsHref(latest.token)}
               className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white font-semibold py-3 rounded-xl transition-colors active:scale-95">
-              💬 Text Invite
+              Text Invite
             </a>
             <button onClick={() => shareSheet(latest.token)}
               className="flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold py-3 rounded-xl transition-colors active:scale-95">
-              📤 Share
+              Share
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => copy(linkFor(latest.token), `link-${latest.token}`)}
               className="btn-ghost py-2.5 text-sm">
-              {copied === `link-${latest.token}` ? '✓ Copied!' : '🔗 Copy Link'}
+              {copied === `link-${latest.token}` ? '✓ Copied!' : 'Copy Link'}
             </button>
             <button onClick={() => copy(latest.token, `code-${latest.token}`)}
               className="btn-ghost py-2.5 text-sm">
-              {copied === `code-${latest.token}` ? '✓ Copied!' : '📋 Copy Code'}
+              {copied === `code-${latest.token}` ? '✓ Copied!' : 'Copy Code'}
             </button>
           </div>
           <p className="text-gray-600 text-xs text-center mt-3">
@@ -113,14 +114,14 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
               <div key={inv.id} className="card flex items-center justify-between gap-2 py-3">
                 <span className="font-mono font-bold text-cyan-400 tracking-widest">{inv.token}</span>
                 <div className="flex gap-1">
-                  <a href={smsHref(inv.token)} className="text-xs px-2.5 py-1.5 rounded-lg bg-royal-muted text-gray-300">💬</a>
+                  <a href={smsHref(inv.token)} className="px-2.5 py-1.5 rounded-lg bg-royal-muted text-gray-300" aria-label="Text invite"><Icon name="message" size={14} /></a>
                   <button onClick={() => copy(linkFor(inv.token), inv.id)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg bg-royal-muted text-gray-300">
-                    {copied === inv.id ? '✓' : '🔗'}
+                    className="px-2.5 py-1.5 rounded-lg bg-royal-muted text-gray-300" aria-label="Copy link">
+                    <Icon name={copied === inv.id ? 'check' : 'link'} size={14} />
                   </button>
                   {isCommissioner && (
                     <button onClick={() => handleRevoke(inv)}
-                      className="text-xs px-2.5 py-1.5 rounded-lg bg-red-900/30 text-red-400">✕</button>
+                      className="px-2.5 py-1.5 rounded-lg bg-red-900/30 text-red-400" aria-label="Revoke"><Icon name="x" size={14} /></button>
                   )}
                 </div>
               </div>

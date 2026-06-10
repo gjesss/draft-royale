@@ -5,6 +5,7 @@ import { useGame } from '../../store/GameContext'
 import { LeagueMember } from '../../types/db'
 import { GameSettings, DEFAULT_SETTINGS, resolveBallCounts } from '../../types/game'
 import Avatar from '../ui/Avatar'
+import Icon from '../ui/Icon'
 
 interface Props {
   gameId: string
@@ -42,8 +43,8 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
   if (!isCommissioner) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-5xl mb-4">⏳</p>
-        <h2 className="text-xl font-bold text-white mb-2">Waiting for commissioner...</h2>
+        <Icon name="clock" size={40} className="text-cyan-400 mb-4" />
+        <h2 className="text-xl font-bold text-white mb-2">Waiting on the commissioner</h2>
         <p className="text-gray-400 text-sm">The game will start shortly.</p>
         <button className="btn-ghost mt-6" onClick={onBack}>← Leave</button>
       </div>
@@ -89,11 +90,11 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
           const total = selected.size + c.pickSwaps + c.shotguns
           return (
             <div className="card bg-black/40 text-center text-sm">
-              <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">The Can — {total} balls</p>
-              <div className="flex justify-center gap-4">
-                <span className="text-cyan-400">🎯 {selected.size}</span>
-                <span className="text-purple-400">🔄 {c.pickSwaps}</span>
-                <span className="text-orange-400">🍺 {c.shotguns}</span>
+              <p className="section-label mb-2">The Can · {total} balls</p>
+              <div className="flex justify-center gap-5">
+                <span className="flex items-center gap-1.5 text-cyan-400 tnum font-semibold"><Icon name="target" size={15} /> {selected.size}</span>
+                <span className="flex items-center gap-1.5 text-violet-400 tnum font-semibold"><Icon name="refresh" size={15} /> {c.pickSwaps}</span>
+                <span className="flex items-center gap-1.5 text-orange-400 tnum font-semibold"><Icon name="cup" size={15} /> {c.shotguns}</span>
               </div>
             </div>
           )
@@ -103,7 +104,7 @@ export default function GameLobby({ gameId, leagueId, members, isCommissioner, s
       <div className="px-4 pb-8 pt-4 border-t border-royal-border">
         <button className="btn-primary w-full py-4 text-lg" onClick={handleStart}
           disabled={selected.size < 2 || starting}>
-          {starting ? 'Starting...' : `🎱 Start Draft Royale (${selected.size} players)`}
+          {starting ? 'Starting...' : `Start Draft Royale (${selected.size} players)`}
         </button>
       </div>
     </div>

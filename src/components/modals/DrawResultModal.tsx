@@ -1,6 +1,9 @@
 import { useGame } from '../../store/GameContext';
 import { BALL_DISPLAY } from '../../utils/gameLogic';
 import { useTurnControl } from '../../hooks/useTurnControl';
+import Icon, { IconName } from '../ui/Icon';
+
+const BALL_ICON: Record<string, IconName> = { 'pick': 'target', 'pick-swap': 'refresh', 'shotgun': 'cup' };
 
 export default function DrawResultModal() {
   const { state, dispatch } = useGame();
@@ -20,8 +23,8 @@ export default function DrawResultModal() {
       <div className="modal-backdrop">
         <div className="modal-panel">
           <div className="p-8 text-center">
-            <p className="text-6xl mb-4">🔄⚠️</p>
-            <h2 className="text-2xl font-bold text-yellow-400 mb-3">Pick Swap Returned!</h2>
+            <Icon name="refresh" size={44} className="mx-auto text-gold-400 mb-3" />
+            <h2 className="text-2xl font-display font-bold uppercase tracking-jersey text-gold-400 mb-3">Pick Swap Returned</h2>
             <p className="text-gray-300 leading-relaxed mb-2">
               <strong className="text-white">Rule 3:</strong> This player already has a pending challenge waiting.
             </p>
@@ -41,8 +44,12 @@ export default function DrawResultModal() {
     <div className="modal-backdrop">
       <div className="modal-panel">
         <div className="p-8 text-center">
-          <p className="text-7xl mb-4 animate-bounce-in">{info.emoji}</p>
-          <h2 className={`text-3xl font-bold mb-2 ${info.color}`}>{info.label}</h2>
+          <div className="flex justify-center mb-3 animate-bounce-in">
+            <span className={`w-16 h-16 rounded-2xl bg-royal-steel border border-royal-border flex items-center justify-center ${info.color}`}>
+              <Icon name={BALL_ICON[ballType]} size={34} />
+            </span>
+          </div>
+          <h2 className={`text-3xl font-display font-bold uppercase tracking-jersey mb-2 ${info.color}`}>{info.label}</h2>
 
           {ballType === 'pick' && playerName && pickedPosition && (
             <div className="mt-4">
@@ -51,13 +58,13 @@ export default function DrawResultModal() {
                 gets <span className="text-cyan-400 font-bold text-xl">Pick #{pickedPosition}</span>
               </p>
               {pickedPosition === 1 && (
-                <p className="text-yellow-400 mt-2 text-sm font-medium">👑 First overall pick!</p>
+                <p className="text-yellow-400 mt-2 text-sm font-medium">First overall pick</p>
               )}
 
               {/* Pending challenge notification */}
               {pendingChallengeName && (
                 <div className="mt-4 bg-purple-900/30 border border-purple-600 rounded-xl px-4 py-3">
-                  <p className="text-purple-300 font-semibold text-sm">⚔️ Challenge incoming!</p>
+                  <p className="text-purple-300 font-semibold text-sm">Challenge incoming</p>
                   <p className="text-gray-400 text-xs mt-1">
                     <strong className="text-white">{pendingChallengeName}</strong> had declared a pending challenge on this pick. A challenge will begin next.
                   </p>
@@ -73,12 +80,12 @@ export default function DrawResultModal() {
           )}
 
           {ballType === 'shotgun' && (
-            <p className="text-gray-300 mt-3 text-sm">Time to shotgun a beer! 🍻</p>
+            <p className="text-gray-300 mt-3 text-sm">Shotgun a beer.</p>
           )}
 
           {canAct
             ? <button className="btn-primary mt-6 w-full" onClick={() => dispatch({ type: 'CLOSE_MODAL' })}>
-                {pendingChallengeName ? '⚔️ Start Challenge' : 'Got it!'}
+                {pendingChallengeName ? 'Start Challenge' : 'Got it!'}
               </button>
             : <p className="text-gray-500 text-sm mt-6">Waiting for {drawerName}…</p>}
         </div>

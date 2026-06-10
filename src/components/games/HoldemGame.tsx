@@ -32,13 +32,13 @@ export default function HoldemGame({ challenge }: { challenge: Challenge }) {
   return (
     <div className="text-center">
       <div className="bg-black/50 border border-royal-border rounded-xl p-3 mb-4">
-        <p className="text-white font-bold">🃏 Texas Hold'em</p>
+        <p className="text-white font-bold">Texas Hold'em</p>
         <p className="text-gray-500 text-xs">No betting · best 5-card hand wins · tie re-deals</p>
       </div>
 
       {!mini ? (
         canAct
-          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'DEAL_HOLDEM' })}>🃏 Deal Hand</button>
+          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'DEAL_HOLDEM' })}>Deal Hand</button>
           : <p className="text-gray-500 text-sm py-2">{challenger?.name} is dealing…</p>
       ) : (
         <>

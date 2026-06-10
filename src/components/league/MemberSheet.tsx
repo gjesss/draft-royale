@@ -35,7 +35,7 @@ export default function MemberSheet({ stat, onClose }: { stat: PlayerStat; onClo
                   {p.position}
                 </span>
                 <span className="text-sm text-white flex-1">Pick #{p.position}</span>
-                {p.locked && <span className="chip-gold">🔒 Locked</span>}
+                {p.locked && <span className="chip-gold">Locked</span>}
                 <span className="text-gray-600 text-xs">{fmtDate(p.date)}</span>
               </div>
             ))}

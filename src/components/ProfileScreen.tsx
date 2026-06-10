@@ -3,6 +3,7 @@ import { useAuth } from '../store/AuthContext'
 import { useMyLeagues } from '../hooks/useLeague'
 import { TrophyIcon } from './Logo'
 import Avatar from './ui/Avatar'
+import Icon, { IconName } from './ui/Icon'
 
 interface Props {
   onOpenRules: () => void
@@ -89,19 +90,19 @@ export default function ProfileScreen({ onOpenRules }: Props) {
 
       {/* Settings list */}
       <div className="card mb-4 divide-y divide-royal-border">
-        <SettingsRow icon="📖" label="How to Play" onClick={onOpenRules} />
-        <SettingsRow icon="⭐" label="Rate Draft Royale" onClick={() => {}} />
-        <SettingsRow icon="💬" label="Send Feedback"
+        <SettingsRow icon="book" label="How to Play" onClick={onOpenRules} />
+        <SettingsRow icon="star" label="Rate Draft Royale" onClick={() => {}} />
+        <SettingsRow icon="message" label="Send Feedback"
           onClick={() => { window.location.href = 'mailto:feedback@draftroyale.app?subject=Draft Royale Feedback' }} />
       </div>
 
       {/* Sign out */}
       <button
         onClick={signOut}
-        className="w-full py-3.5 rounded-xl border border-red-900/60 text-red-400 font-medium
-                   hover:bg-red-900/20 transition-colors active:scale-95"
+        className="w-full py-3.5 rounded-xl border border-red-900/60 text-red-400 font-semibold uppercase tracking-jersey
+                   hover:bg-red-900/20 transition-colors active:scale-[0.98] flex items-center justify-center gap-2"
       >
-        Sign Out
+        <Icon name="logout" size={18} /> Sign Out
       </button>
 
       <div className="flex items-center justify-center gap-2 mt-8 opacity-40">
@@ -112,12 +113,12 @@ export default function ProfileScreen({ onOpenRules }: Props) {
   )
 }
 
-function SettingsRow({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+function SettingsRow({ icon, label, onClick }: { icon: IconName; label: string; onClick: () => void }) {
   return (
     <button onClick={onClick} className="w-full flex items-center gap-3 py-3.5 text-left touch-manipulation active:opacity-60">
-      <span className="text-xl">{icon}</span>
+      <Icon name={icon} size={18} className="text-gray-400" />
       <span className="text-white flex-1">{label}</span>
-      <span className="text-gray-600">›</span>
+      <Icon name="chevronRight" size={16} className="text-gray-600" />
     </button>
   )
 }

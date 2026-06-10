@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from '../ui/Icon'
 
 interface Props {
   onJoinCode: (token: string) => void
@@ -15,8 +16,8 @@ export default function JoinScreen({ onJoinCode }: Props) {
   return (
     <div className="min-h-screen max-w-lg mx-auto px-4 pt-10 flex flex-col items-center">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-700 flex items-center justify-center mx-auto mb-4">
-          <span className="text-3xl">🔗</span>
+        <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-700 flex items-center justify-center mx-auto mb-4 text-cyan-400">
+          <Icon name="link" size={30} />
         </div>
         <h2 className="text-2xl font-bold text-white">Join a League</h2>
         <p className="text-gray-400 text-sm mt-1">Enter the 6-character code a commissioner shared with you.</p>

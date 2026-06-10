@@ -56,11 +56,11 @@ export default function QuartersGame({ challenge }: { challenge: Challenge }) {
     return (
       <div className="text-center">
         <div className="bg-black/50 border border-royal-border rounded-xl p-3 mb-4">
-          <p className="text-white font-bold">🪙 Quarters</p>
+          <p className="text-white font-bold">Quarters</p>
           <p className="text-gray-500 text-xs">Tap when the marker hits the green zone to sink it · first to 3 · 5-min cap</p>
         </div>
         {canAct
-          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'START_QUARTERS', startedAt: Date.now() })}>🪙 Start</button>
+          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'START_QUARTERS', startedAt: Date.now() })}>Start</button>
           : <p className="text-gray-500 text-sm py-3">Getting ready…</p>}
       </div>
     );
@@ -106,19 +106,19 @@ export default function QuartersGame({ challenge }: { challenge: Challenge }) {
 
       {!done && mini.lastAttempt && !myTurn && !bounced && (
         <p className={`text-sm font-bold mb-2 ${mini.lastAttempt.success ? 'text-green-400' : 'text-gray-500'}`}>
-          {mini.lastAttempt.success ? '🪙 Sank it!' : '✗ Missed'}
+          {mini.lastAttempt.success ? 'SANK IT' : 'MISSED'}
         </p>
       )}
 
       {done ? (
         <div className="mt-2">
-          <p className="text-xl font-bold text-white mb-2">🏆 {(mini.winner === 'c' ? challenger : defender)?.name} wins!</p>
+          <p className="text-xl font-bold text-white mb-2">{(mini.winner === 'c' ? challenger : defender)?.name} wins</p>
           {canAct
             ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: mini.winner === 'c' })}>Apply Result</button>
             : <p className="text-gray-500 text-sm">Waiting for the result…</p>}
         </div>
       ) : myTurn ? (
-        <button className="btn-primary w-full" onClick={bounce}>🪙 Bounce!</button>
+        <button className="btn-primary w-full" onClick={bounce}>Bounce</button>
       ) : null}
     </div>
   );

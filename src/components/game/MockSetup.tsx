@@ -38,7 +38,7 @@ export default function MockSetup({ onBack }: Props) {
     <div className="min-h-screen max-w-lg mx-auto flex flex-col">
       <div className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-royal-border">
         <button className="text-gray-400 hover:text-white p-2 -ml-2" onClick={onBack}>← Back</button>
-        <h2 className="text-xl font-bold neon-text">🎮 Mock Draft</h2>
+        <h2 className="text-xl font-bold neon-text">Mock Draft</h2>
       </div>
 
       <div className="flex-1 px-4 py-6 space-y-6">
@@ -79,7 +79,7 @@ export default function MockSetup({ onBack }: Props) {
 
       <div className="px-4 pb-8 pt-4 border-t border-royal-border">
         <button className="btn-primary w-full py-4 text-lg" onClick={start}>
-          🎱 Start Mock Draft
+          Start Mock Draft
         </button>
       </div>
     </div>

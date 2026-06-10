@@ -56,7 +56,7 @@ function AppRouter() {
     return <div className="min-h-screen flex items-center justify-center"><TrophyIcon size={56} className="animate-pulse" /></div>
   }
   if (!user) {
-    return <AuthScreen redirectNote={fullScreen?.kind === 'join' ? '🏆 Sign in to accept your league invite' : undefined} />
+    return <AuthScreen redirectNote={fullScreen?.kind === 'join' ? 'Sign in to accept your league invite' : undefined} />
   }
   if (!profile) return <ProfileSetup />
 

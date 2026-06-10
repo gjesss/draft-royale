@@ -2,6 +2,7 @@ import { useGame } from '../../store/GameContext';
 import { Challenge, ChallengeGame, DIGITAL_GAMES } from '../../types/game';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
 import { useTurnControl } from '../../hooks/useTurnControl';
+import Icon from '../ui/Icon';
 import HighCardGame from '../games/HighCardGame';
 import HoldemGame from '../games/HoldemGame';
 import BeerPongGame from '../games/BeerPongGame';
@@ -40,8 +41,8 @@ export default function ChallengeModal({ challenge }: Props) {
 
           {/* Header */}
           <div className="text-center mb-5">
-            <p className="text-5xl mb-2">⚔️</p>
-            <h2 className="text-2xl font-bold text-purple-400">CHALLENGE!</h2>
+            <Icon name="swords" size={36} className="mx-auto text-violet-400 mb-2" />
+            <h2 className="text-2xl font-display font-bold uppercase tracking-jersey text-violet-400">Challenge</h2>
           </div>
 
           {/* Matchup */}
@@ -62,7 +63,7 @@ export default function ChallengeModal({ challenge }: Props) {
               <p className="text-cyan-400 text-sm font-medium">
                 Pick #{challenge.targetPickPosition}
                 {defenderSlot && defenderSlot.defenseCount > 0 && (
-                  <span className="text-gray-400 ml-1">🛡×{defenderSlot.defenseCount}</span>
+                  <span className="text-gray-400 ml-1">DEF ×{defenderSlot.defenseCount}</span>
                 )}
               </p>
             </div>
@@ -90,7 +91,7 @@ export default function ChallengeModal({ challenge }: Props) {
                         hover:border-purple-500 hover:bg-purple-500/10 text-white
                         transition-all active:scale-95 text-left"
                     >
-                      <p className="font-semibold">{g.emoji} {g.label}</p>
+                      <p className="font-semibold">{g.label}</p>
                       <p className="text-gray-500 text-xs mt-0.5">{g.description}</p>
                     </button>
                   );
@@ -118,7 +119,6 @@ export default function ChallengeModal({ challenge }: Props) {
               <div className="bg-black/50 border border-royal-border rounded-xl p-4 mb-5 text-center">
                 <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Game</p>
                 <p className="text-white font-bold text-lg">
-                  {CHALLENGE_GAME_DISPLAY[challenge.gameType].emoji}{' '}
                   {CHALLENGE_GAME_DISPLAY[challenge.gameType].label}
                 </p>
                 <p className="text-gray-500 text-xs mt-1">
@@ -141,7 +141,7 @@ export default function ChallengeModal({ challenge }: Props) {
                     border-purple-600 bg-purple-900/20 hover:bg-purple-800/40
                     text-white transition-all active:scale-95"
                 >
-                  <p className="text-2xl mb-1">🏆</p>
+                  <Icon name="trophy" size={22} className="text-violet-300 mb-1" />
                   <p className="font-bold text-sm text-center leading-tight">{challenger?.name}</p>
                   <p className="text-purple-400 text-xs mt-1">wins Pick #{challenge.targetPickPosition}</p>
                 </button>
@@ -152,12 +152,12 @@ export default function ChallengeModal({ challenge }: Props) {
                     border-cyan-600 bg-cyan-900/20 hover:bg-cyan-800/40
                     text-white transition-all active:scale-95"
                 >
-                  <p className="text-2xl mb-1">🛡</p>
+                  <Icon name="shield" size={22} className="text-cyan-300 mb-1" />
                   <p className="font-bold text-sm text-center leading-tight">{defender?.name}</p>
                   <p className="text-cyan-400 text-xs mt-1">
                     defends Pick #{challenge.targetPickPosition}
                     {defenderSlot && (
-                      <span> ({defenderSlot.defenseCount + 1 >= 2 ? '🔒 LOCKED!' : `${defenderSlot.defenseCount + 1}/2`})</span>
+                      <span> ({defenderSlot.defenseCount + 1 >= 2 ? 'LOCKED' : `${defenderSlot.defenseCount + 1}/2`})</span>
                     )}
                   </p>
                 </button>

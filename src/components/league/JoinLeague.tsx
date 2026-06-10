@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { lookupInviteToken, acceptInvite } from '../../hooks/useLeague'
 import { useAuth } from '../../store/AuthContext'
+import Icon from '../ui/Icon'
 
 interface Props {
   token: string
@@ -51,7 +52,7 @@ export default function JoinLeague({ token, onJoined, onError }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-      <span className="text-5xl mb-4">🔗</span>
+      <Icon name="link" size={44} className="text-cyan-400 mb-4" />
 
       {status === 'loading' && <p className="text-gray-400">Checking invite...</p>}
 

@@ -6,6 +6,7 @@ import { useMyLeagues } from '../../hooks/useLeague'
 import { TrophyIcon } from '../Logo'
 import { TurnOrderMode, AbsentBehavior, BallMode } from '../../types/game'
 import Avatar from '../ui/Avatar'
+import Icon from '../ui/Icon'
 import { SkeletonList } from '../ui/Skeleton'
 
 interface Props {
@@ -80,13 +81,15 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
       {/* Try a mock round — available to everyone */}
       {onMockDraft && (
         <button onClick={onMockDraft}
-          className="card-interactive w-full flex items-center gap-3 mb-6 border-cyan-500/30">
-          <span className="text-3xl">🎮</span>
+          className="card-interactive w-full flex items-center gap-3 mb-6 !border-cyan-500/40">
+          <span className="w-11 h-11 rounded-lg bg-cyan-900/30 border border-cyan-700/40 flex items-center justify-center text-cyan-400 shrink-0">
+            <Icon name="gamepad" size={22} />
+          </span>
           <div className="flex-1 text-left">
-            <p className="font-bold text-white">Try a Mock Round</p>
+            <p className="font-bold text-white font-display uppercase tracking-jersey">Try a Mock Round</p>
             <p className="text-gray-500 text-sm">Practice solo vs. auto-players — no league needed</p>
           </div>
-          <span className="text-cyan-400">›</span>
+          <Icon name="chevronRight" size={18} className="text-cyan-400" />
         </button>
       )}
 
@@ -104,9 +107,9 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
           <SkeletonList rows={3} />
         ) : leagues.length === 0 ? (
           <div className="card text-center py-8">
-            <p className="text-4xl mb-3">🏈</p>
-            <p className="text-gray-400">No leagues yet.</p>
-            <p className="text-gray-600 text-sm mt-1">Create one, or tap Join to enter a code.</p>
+            <Icon name="trophy" size={32} className="mx-auto text-gray-600 mb-2" />
+            <p className="text-gray-300 font-semibold">No leagues yet</p>
+            <p className="text-gray-600 text-sm mt-1">Create one, or use a code to join.</p>
           </div>
         ) : (
           leagues.map(l => (
@@ -177,17 +180,17 @@ export default function Dashboard({ onSelectLeague, onJoinViaToken, onMockDraft 
                   <option value="scaled">Scale to number of players</option>
                   <option value="custom">Custom totals</option>
                 </select>
-                <p className="text-gray-600 text-xs mt-1 pl-1">🎯 Name balls are always 1 per player.</p>
+                <p className="text-gray-600 text-xs mt-1 pl-1">Name balls are always 1 per player.</p>
 
                 {ballMode === 'scaled' ? (
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <BallField label="🔄 Swaps / player" value={swapsPP} onChange={setSwapsPP} max={10} />
-                    <BallField label="🍺 Shotguns / player" value={shotgunsPP} onChange={setShotgunsPP} max={10} />
+                    <BallField label="Swaps / player" value={swapsPP} onChange={setSwapsPP} max={10} />
+                    <BallField label="Shotguns / player" value={shotgunsPP} onChange={setShotgunsPP} max={10} />
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <BallField label="🔄 Total swaps" value={customSwaps} onChange={setCustomSwaps} max={200} />
-                    <BallField label="🍺 Total shotguns" value={customShotguns} onChange={setCustomShotguns} max={200} />
+                    <BallField label="Total swaps" value={customSwaps} onChange={setCustomSwaps} max={200} />
+                    <BallField label="Total shotguns" value={customShotguns} onChange={setCustomShotguns} max={200} />
                   </div>
                 )}
               </div>

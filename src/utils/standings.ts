@@ -1,4 +1,5 @@
 import { DraftResult } from '../types/db'
+import { IconName } from '../components/ui/Icon'
 
 export type DraftGroup = { gameId: string; date: string; results: DraftResult[] }
 
@@ -48,7 +49,7 @@ export function computeStandings(history: DraftGroup[]): PlayerStat[] {
 
 export interface ActivityEvent {
   id: string
-  icon: string
+  icon: IconName
   title: string
   subtitle: string
   date: string
@@ -64,9 +65,9 @@ export function computeActivity(history: DraftGroup[]): ActivityEvent[] {
     if (first) {
       events.push({
         id: `${g.gameId}-draft`,
-        icon: '🏆',
+        icon: 'trophy',
         title: `Draft #${history.length - i} complete`,
-        subtitle: `👑 ${first.playerName} earned the #1 pick${lockCount ? ` · 🔒 ${lockCount} locked` : ''}`,
+        subtitle: `${first.playerName} earned the #1 pick${lockCount ? ` · ${lockCount} locked` : ''}`,
         date: g.date,
       })
     }

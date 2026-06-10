@@ -45,7 +45,7 @@ export default function BeerPongGame({ challenge }: { challenge: Challenge }) {
     return (
       <div className="text-center">
         <div className="bg-black/50 border border-royal-border rounded-xl p-3 mb-4">
-          <p className="text-white font-bold">🏓 Beer Pong</p>
+          <p className="text-white font-bold">Beer Pong</p>
           <p className="text-gray-500 text-xs">Drag to aim · 2 shots per turn · sink both = balls back · clear the rack to win</p>
         </div>
         {!canConfigure ? (
@@ -67,7 +67,7 @@ export default function BeerPongGame({ challenge }: { challenge: Challenge }) {
             </label>
             <button className="btn-primary w-full"
               onClick={() => dispatch({ type: 'START_BEERPONG', cups, timeLimit, startedAt: Date.now() })}>
-              🏓 Rack 'em — Start
+              Rack 'em — Start
             </button>
           </>
         )}
@@ -191,7 +191,7 @@ function BeerPongTable({ challenge, mini, dispatch, canActAs, challengerName, de
       {!done && (
         <p className="text-center text-xs text-gray-400 mb-1">
           {myShot
-            ? <span className="text-cyan-400 font-medium">Your throw — {mini.shotsLeft} shot{mini.shotsLeft !== 1 ? 's' : ''} left {mini.madeThisTurn > 0 && '🔥'}</span>
+            ? <span className="text-cyan-400 font-medium">Your throw — {mini.shotsLeft} shot{mini.shotsLeft !== 1 ? 's' : ''} left</span>
             : <span>Waiting on <span className="text-white">{shooterName}</span> ({mini.shotsLeft} left)</span>}
         </p>
       )}
@@ -236,7 +236,7 @@ function BeerPongTable({ challenge, mini, dispatch, canActAs, challengerName, de
         {/* Last shot flash */}
         {mini.lastShot && !throwing && mini.phase === 'playing' && (
           <p className={`absolute bottom-1 left-0 right-0 text-center text-sm font-bold ${mini.lastShot.made ? 'text-green-400' : 'text-gray-500'}`}>
-            {mini.lastShot.made ? '🎯 Cup!' : '✗ Miss'}
+            {mini.lastShot.made ? 'CUP' : 'MISS'}
           </p>
         )}
       </div>
@@ -244,7 +244,7 @@ function BeerPongTable({ challenge, mini, dispatch, canActAs, challengerName, de
       {/* Controls / result */}
       {done ? (
         <div className="text-center mt-4">
-          <p className="text-xl font-bold text-white mb-2">🏆 {winnerName} wins!</p>
+          <p className="text-xl font-bold text-white mb-2">{winnerName} wins</p>
           {(canActAs(challenge.challengerId) || canActAs(challenge.defenderId))
             ? <button className="btn-primary w-full"
                 onClick={() => dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: mini.winner === 'c' })}>

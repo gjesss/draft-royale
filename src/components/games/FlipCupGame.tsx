@@ -26,11 +26,11 @@ export default function FlipCupGame({ challenge }: { challenge: Challenge }) {
     return (
       <div className="text-center">
         <div className="bg-black/50 border border-royal-border rounded-xl p-3 mb-4">
-          <p className="text-white font-bold">🥤 Flip Cup</p>
+          <p className="text-white font-bold">Flip Cup</p>
           <p className="text-gray-500 text-xs">Chug, then flick the cup to flip it rim-down · first to 3 wins · take turns</p>
         </div>
         {canAct
-          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'START_FLIPCUP' })}>🍺 Chug & Start</button>
+          ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'START_FLIPCUP' })}>Chug & Start</button>
           : <p className="text-gray-500 text-sm py-3">Getting ready…</p>}
       </div>
     );
@@ -94,14 +94,14 @@ export default function FlipCupGame({ challenge }: { challenge: Challenge }) {
         </div>
         {!done && mini.lastAttempt && !flipping && (
           <p className={`absolute top-2 left-0 right-0 text-sm font-bold ${mini.lastAttempt.success ? 'text-green-400' : 'text-gray-500'}`}>
-            {mini.lastAttempt.success ? '✓ Flipped!' : '✗ Missed'}
+            {mini.lastAttempt.success ? 'FLIPPED' : 'MISSED'}
           </p>
         )}
       </div>
 
       {done ? (
         <div className="mt-4">
-          <p className="text-xl font-bold text-white mb-2">🏆 {(mini.winner === 'c' ? challenger : defender)?.name} wins!</p>
+          <p className="text-xl font-bold text-white mb-2">{(mini.winner === 'c' ? challenger : defender)?.name} wins</p>
           {canAct
             ? <button className="btn-primary w-full" onClick={() => dispatch({ type: 'RESOLVE_CHALLENGE', challengerWon: mini.winner === 'c' })}>Apply Result</button>
             : <p className="text-gray-500 text-sm">Waiting for the result…</p>}

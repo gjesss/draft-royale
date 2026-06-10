@@ -3,6 +3,7 @@ import { useGame } from '../../store/GameContext';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
 import { ChallengeGame } from '../../types/game';
 import { useTurnControl } from '../../hooks/useTurnControl';
+import Icon from '../ui/Icon';
 
 interface Props {
   challengerId: string;
@@ -21,8 +22,8 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
       <div className="modal-backdrop">
         <div className="modal-panel">
           <div className="p-8 text-center">
-            <p className="text-5xl mb-2">🔄</p>
-            <h2 className="text-2xl font-bold text-purple-400 mb-2">PICK SWAP</h2>
+            <Icon name="refresh" size={36} className="mx-auto text-violet-400 mb-2" />
+            <h2 className="text-2xl font-bold text-purple-400 mb-2">Pick Swap</h2>
             <p className="text-white font-medium">{challenger?.name}</p>
             <p className="text-gray-400 text-sm mt-1">is deciding what to do with their pick swap…</p>
           </div>
@@ -56,8 +57,8 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
       <div className="modal-panel">
         <div className="p-6">
           <div className="text-center mb-6">
-            <p className="text-5xl mb-2">🔄</p>
-            <h2 className="text-2xl font-bold text-purple-400">PICK SWAP</h2>
+            <Icon name="refresh" size={36} className="mx-auto text-violet-400 mb-2" />
+            <h2 className="text-2xl font-bold text-purple-400">Pick Swap</h2>
             <p className="text-white font-medium">{challenger?.name}</p>
             <p className="text-gray-400 text-sm mt-1">Choose what to do with your pick swap</p>
           </div>
@@ -70,7 +71,7 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
                 onClick={() => setMode('immediate')}
                 disabled={challengeableSlots.length === 0}
               >
-                <p className="font-bold text-purple-300">⚔️ Challenge a pick now</p>
+                <p className="font-bold text-purple-300">Challenge a pick now</p>
                 <p className="text-gray-400 text-sm mt-0.5">
                   {challengeableSlots.length === 0
                     ? 'No challengeable picks yet'
@@ -84,7 +85,7 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
                 onClick={() => setMode('future')}
                 disabled={unfilledPositions.length === 0}
               >
-                <p className="font-bold text-yellow-300">⏳ Wait for a future pick</p>
+                <p className="font-bold text-yellow-300">Wait for a future pick</p>
                 <p className="text-gray-400 text-sm mt-0.5">
                   {unfilledPositions.length === 0
                     ? 'All picks are filled'
@@ -120,7 +121,7 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
                         <span className="text-gray-400 ml-2">– {holder?.name}</span>
                       </span>
                       <span className="text-gray-500 text-xs">
-                        {slot.defenseCount === 1 ? '🛡 1 defense' : '🆕 No defenses'}
+                        {slot.defenseCount === 1 ? '1 defense' : 'No defenses'}
                       </span>
                     </button>
                   );
