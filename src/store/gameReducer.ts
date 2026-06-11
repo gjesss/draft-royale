@@ -251,6 +251,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     // ── Declare a pending challenge on a not-yet-drawn pick → ends draw cycle ───
     case 'SET_PENDING_CHALLENGE': {
       const { challengerId, targetPosition } = action;
+
+      // Rule 5 guard: a position can only have ONE pending claim. Without this,
+      // the second claimant's flag never clears when the pick fills (only the
+      // first pending is resolved), and Rule 3 then forces them to redraw
+      // pick-swaps forever — a soft-lock. The modal filters these out too;
+      // this is the authoritative check.
+      const alreadyClaimed = state.players.some(
+        p => p.id !== challengerId && p.pendingChallengePickPosition === targetPosition
+      );
+      if (alreadyClaimed) return state;
+
       let players = updatePlayer(state.players, challengerId, { pendingChallengePickPosition: targetPosition });
 
       // If no pick balls remain to ever fill that slot, the pending swap can't trigger — forfeit.

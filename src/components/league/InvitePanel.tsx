@@ -92,11 +92,11 @@ export default function InvitePanel({ leagueId, isCommissioner, leagueName }: Pr
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => copy(linkFor(latest.token), `link-${latest.token}`)}
               className="btn-ghost py-2.5 text-sm">
-              {copied === `link-${latest.token}` ? '✓ Copied!' : 'Copy Link'}
+              {copied === `link-${latest.token}` ? 'Copied' : 'Copy Link'}
             </button>
             <button onClick={() => copy(latest.token, `code-${latest.token}`)}
               className="btn-ghost py-2.5 text-sm">
-              {copied === `code-${latest.token}` ? '✓ Copied!' : 'Copy Code'}
+              {copied === `code-${latest.token}` ? 'Copied' : 'Copy Code'}
             </button>
           </div>
           <p className="text-gray-600 text-xs text-center mt-3">

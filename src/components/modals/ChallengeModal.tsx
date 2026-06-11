@@ -1,13 +1,21 @@
 import { useGame } from '../../store/GameContext';
 import { Challenge, ChallengeGame, DIGITAL_GAMES } from '../../types/game';
 import { CHALLENGE_GAME_DISPLAY } from '../../utils/gameLogic';
+import { lazy, Suspense } from 'react';
 import { useTurnControl } from '../../hooks/useTurnControl';
 import Icon from '../ui/Icon';
-import HighCardGame from '../games/HighCardGame';
-import HoldemGame from '../games/HoldemGame';
-import BeerPongGame from '../games/BeerPongGame';
-import FlipCupGame from '../games/FlipCupGame';
-import QuartersGame from '../games/QuartersGame';
+
+// Mini-games are only needed once a challenge starts — keep them out of the
+// initial chunk (PERF-103 in app-review-2026-06-09.md).
+const HighCardGame = lazy(() => import('../games/HighCardGame'));
+const HoldemGame = lazy(() => import('../games/HoldemGame'));
+const BeerPongGame = lazy(() => import('../games/BeerPongGame'));
+const FlipCupGame = lazy(() => import('../games/FlipCupGame'));
+const QuartersGame = lazy(() => import('../games/QuartersGame'));
+
+const GameFallback = () => (
+  <p className="text-center text-gray-500 text-sm py-6">Loading game…</p>
+);
 
 interface Props {
   challenge: Challenge;
@@ -103,13 +111,13 @@ export default function ChallengeModal({ challenge }: Props) {
           {/* Step 2a: Digital game played in-app (auto-resolves) */}
           {(challenge.status === 'in-progress' || challenge.status === 'resolving')
             && challenge.gameType && DIGITAL_GAMES.includes(challenge.gameType) && (
-            <>
+            <Suspense fallback={<GameFallback />}>
               {challenge.gameType === 'high-card' && <HighCardGame challenge={challenge} />}
               {challenge.gameType === 'holdem' && <HoldemGame challenge={challenge} />}
               {challenge.gameType === 'beer-pong' && <BeerPongGame challenge={challenge} />}
               {challenge.gameType === 'flip-cup' && <FlipCupGame challenge={challenge} />}
               {challenge.gameType === 'quarters' && <QuartersGame challenge={challenge} />}
-            </>
+            </Suspense>
           )}
 
           {/* Step 2b: Physical game → manually record winner */}

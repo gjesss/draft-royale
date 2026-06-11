@@ -151,51 +151,43 @@ export function getPlayer(players: Player[], id: string): Player | undefined {
 }
 
 // ─── Ball type display ────────────────────────────────────────────────────────
-export const BALL_DISPLAY: Record<BallType, { label: string; color: string; emoji: string; description: string }> = {
+export const BALL_DISPLAY: Record<BallType, { label: string; color: string; description: string }> = {
   'pick': {
     label: 'PICK BALL',
     color: 'text-cyan-400',
-    emoji: '🎯',
     description: 'A player name has been drawn!',
   },
   'pick-swap': {
     label: 'PICK SWAP',
-    color: 'text-purple-400',
-    emoji: '🔄',
+    color: 'text-violet-400',
     description: 'Challenge any draft pick position!',
   },
   'shotgun': {
     label: 'SHOTGUN',
     color: 'text-orange-400',
-    emoji: '🍺',
     description: 'Shotgun a beer! (Max 3 per player)',
   },
 };
 
-export const CHALLENGE_GAME_DISPLAY: Record<string, { label: string; emoji: string; description: string }> = {
+export const CHALLENGE_GAME_DISPLAY: Record<string, { label: string; description: string }> = {
   'beer-pong': {
     label: 'Beer Pong',
-    emoji: '🏓',
     description: '6 cups · 5 min max · most cups after time wins · tie → first to gain lead wins',
   },
   'quarters': {
     label: 'Quarters',
-    emoji: '🪙',
     description: 'First to 3 · 5 min max · most wins after time · tie → first to gain lead wins',
   },
   'flip-cup': {
     label: 'Flip Cup 1v1',
-    emoji: '🥤',
     description: '3 cups · chug & first to flip all 3 cups wins',
   },
   'holdem': {
     label: "Hold'em",
-    emoji: '🃏',
     description: 'Deal one hand · best hand wins · tie → high card playoff',
   },
   'high-card': {
     label: 'High Card',
-    emoji: '🂠',
     description: 'Each player draws one card · highest card wins · re-draw on a tie',
   },
 };

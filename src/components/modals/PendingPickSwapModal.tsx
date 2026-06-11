@@ -37,8 +37,13 @@ export default function PendingPickSwapModal({ challengerId }: Props) {
     s => s.playerId !== null && !s.locked && s.playerId !== challengerId
   );
 
-  // Unfilled positions the challenger could call in advance
-  const unfilledPositions = state.pickSlots.filter(s => s.playerId === null);
+  // Unfilled positions the challenger could call in advance — excluding any
+  // already claimed by another player's pending challenge (Rule 5: one claim
+  // per position; matching guard lives in the reducer).
+  const unfilledPositions = state.pickSlots.filter(
+    s => s.playerId === null
+      && !state.players.some(p => p.id !== challengerId && p.pendingChallengePickPosition === s.position)
+  );
 
   const handleImmediateChallenge = (targetPickPosition: number) => {
     dispatch({ type: 'INITIATE_CHALLENGE', challengerId, targetPickPosition });
